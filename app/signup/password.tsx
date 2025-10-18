@@ -14,56 +14,45 @@ import {
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
-export default function SignupPage() {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [showEmailInput, setShowEmailInput] = useState(false);
+export default function PasswordPage() {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const validatePhoneNumber = (phone: string): boolean => {
-    const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
-    return phoneRegex.test(phone.replace(/\s/g, ''));
-  };
+  const validatePassword = (): boolean => {
+    setError('');
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    if (!password.trim()) {
+      setError('Please enter a password');
+      return false;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return false;
+    }
+
+    if (!confirmPassword.trim()) {
+      setError('Please confirm your password');
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    return true;
   };
 
   const handleNext = () => {
-    setError('');
-
-    if (showEmailInput) {
-      if (!emailAddress.trim()) {
-        setError('Please enter your email address');
-        return;
-      }
-      if (!validateEmail(emailAddress)) {
-        setError('Please enter a valid email address');
-        return;
-      }
-      router.push('/signup/password');
-    } else {
-      if (!phoneNumber.trim()) {
-        setError('Please enter your phone number');
-        return;
-      }
-      if (!validatePhoneNumber(phoneNumber)) {
-        setError('Please enter a valid phone number');
-        return;
-      }
-      router.push('/signup/password');
+    if (validatePassword()) {
     }
   };
 
-  const handleSwitchToEmail = () => {
-    setShowEmailInput(true);
-    setError('');
-  };
-
   const handleBackToLogin = () => {
-    router.back();
+    router.push('/');
   };
 
   const dismissKeyboard = () => {
@@ -101,24 +90,34 @@ export default function SignupPage() {
             <View style={styles.bottomSection}>
               <View style={styles.card}>
                 <View style={styles.titleSection}>
-                  <Text style={styles.title}>
-                    {showEmailInput ? "What's your email address?" : "What's your mobile number?"}
-                  </Text>
+                  <Text style={styles.title}>Create your password</Text>
                   <Text style={styles.infoText}>
-                    {showEmailInput
-                      ? 'Enter the email address where people can connect. We will make sure this is not visible on your profile.'
-                      : 'Enter the mobile number on which people can connect. We will make sure this is not visible on your profile.'}
+                    Create a password at least six letters or numbers. Its should be something which others can not guess.{' '}
+                    <Text style={styles.boldText}>Make it as strong as you are.</Text>
                   </Text>
                 </View>
 
                 <View style={styles.inputSection}>
                   <TextInput
                     style={styles.input}
-                    placeholder={showEmailInput ? 'email@example.com' : '+1 234 567 8900'}
+                    placeholder="Password"
                     placeholderTextColor="#9CA3AF"
-                    value={showEmailInput ? emailAddress : phoneNumber}
-                    onChangeText={showEmailInput ? setEmailAddress : setPhoneNumber}
-                    keyboardType={showEmailInput ? 'email-address' : 'phone-pad'}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+
+                <View style={styles.inputSection}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#9CA3AF"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
@@ -128,23 +127,14 @@ export default function SignupPage() {
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (showEmailInput ? !emailAddress : !phoneNumber) && styles.buttonDisabled
+                    (!password || !confirmPassword) && styles.buttonDisabled
                   ]}
-                  disabled={showEmailInput ? !emailAddress : !phoneNumber}
+                  disabled={!password || !confirmPassword}
                   onPress={handleNext}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.buttonText}>Next</Text>
                 </TouchableOpacity>
-
-                {!showEmailInput && (
-                  <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={handleSwitchToEmail}
-                  >
-                    <Text style={styles.secondaryButtonText}>Sign up with email address</Text>
-                  </TouchableOpacity>
-                )}
 
                 <TouchableOpacity
                   style={styles.loginLinkContainer}
@@ -243,6 +233,10 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     textAlign: 'center',
   },
+  boldText: {
+    fontWeight: '700',
+    color: '#1F2937',
+  },
   inputSection: {
     marginBottom: 24,
   },
@@ -276,21 +270,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 0.2,
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-  },
-  secondaryButtonText: {
-    color: '#4B5563',
     fontSize: 15,
     fontWeight: '500',
     letterSpacing: 0.2,
