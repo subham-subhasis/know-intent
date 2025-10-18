@@ -1,7 +1,20 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Pressable, Linking } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Pressable,
+  Linking,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView
+} from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import AnimatedGradient from '@/components/AnimatedGradient';
 
 export default function LandingPage() {
   const [inputVisible, setInputVisible] = useState(false);
@@ -17,74 +30,89 @@ export default function LandingPage() {
     Linking.openURL('https://intent.app/privacy');
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <LinearGradient
-      colors={['#F8F9FA', '#E8EAED', '#D3D6DA']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    >
-      <View style={styles.topSection}>
-        <Text style={styles.appName}>Intent</Text>
-        <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
-      </View>
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <View style={styles.container}>
+        <AnimatedGradient />
 
-      <View style={styles.bottomSection}>
-        <View style={styles.card}>
-          <Pressable
-            style={styles.inputContainer}
-            onPress={() => setInputVisible(true)}
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            {!inputVisible ? (
-              <Text style={styles.placeholderText}>Enter Username/Phone Number</Text>
-            ) : (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Username/Phone Number"
-                placeholderTextColor="#9CA3AF"
-                value={username}
-                onChangeText={setUsername}
-                autoFocus
-                keyboardType="default"
-              />
-            )}
-          </Pressable>
+            <View style={styles.topSection}>
+              <Text style={styles.appName}>Intent</Text>
+              <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+            </View>
 
-          <View style={styles.checkboxContainer}>
-            <TouchableOpacity
-              style={styles.checkbox}
-              onPress={() => setAgreedToTerms(!agreedToTerms)}
-            >
-              <View style={[styles.checkboxBox, agreedToTerms && styles.checkboxChecked]}>
-                {agreedToTerms && <Text style={styles.checkmark}>✓</Text>}
+            <View style={styles.bottomSection}>
+              <View style={styles.card}>
+                <Pressable
+                  style={styles.inputContainer}
+                  onPress={() => setInputVisible(true)}
+                >
+                  {!inputVisible ? (
+                    <Text style={styles.placeholderText}>Enter Username/Phone Number</Text>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Username/Phone Number"
+                      placeholderTextColor="#9CA3AF"
+                      value={username}
+                      onChangeText={setUsername}
+                      autoFocus
+                      keyboardType="default"
+                    />
+                  )}
+                </Pressable>
+
+                <View style={styles.checkboxContainer}>
+                  <TouchableOpacity
+                    style={styles.checkbox}
+                    onPress={() => setAgreedToTerms(!agreedToTerms)}
+                  >
+                    <View style={[styles.checkboxBox, agreedToTerms && styles.checkboxChecked]}>
+                      {agreedToTerms && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                  </TouchableOpacity>
+                  <Text style={styles.checkboxText}>
+                    Allow Intent to access your personal information
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.button}
+                  disabled={!username || !agreedToTerms}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.buttonText}>Setup your account</Text>
+                </TouchableOpacity>
+
+                <View style={styles.legalContainer}>
+                  <Text style={styles.legalText}>By proceeding you agree to our </Text>
+                  <TouchableOpacity onPress={handleOpenTerms}>
+                    <Text style={styles.legalLink}>terms of use</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.legalText}> and </Text>
+                  <TouchableOpacity onPress={handleOpenPrivacy}>
+                    <Text style={styles.legalLink}>privacy policy</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </TouchableOpacity>
-            <Text style={styles.checkboxText}>
-              Allow Intent to access your personal information
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.button}
-            disabled={!username || !agreedToTerms}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Setup your account</Text>
-          </TouchableOpacity>
-
-          <View style={styles.legalContainer}>
-            <Text style={styles.legalText}>By proceeding you agree to our </Text>
-            <TouchableOpacity onPress={handleOpenTerms}>
-              <Text style={styles.legalLink}>terms of use</Text>
-            </TouchableOpacity>
-            <Text style={styles.legalText}> and </Text>
-            <TouchableOpacity onPress={handleOpenPrivacy}>
-              <Text style={styles.legalLink}>privacy policy</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
-    </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -92,40 +120,56 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    minHeight: '100%',
+  },
   topSection: {
     flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 80,
+    minHeight: 280,
   },
   appName: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
     marginBottom: 8,
     letterSpacing: -1,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   tagline: {
     fontSize: 18,
     fontWeight: '400',
-    color: '#6B7280',
+    color: '#E5E7EB',
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   bottomSection: {
     flex: 3,
     justifyContent: 'flex-start',
     paddingHorizontal: 24,
     paddingTop: 20,
+    paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 24,
     padding: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+    backdropFilter: 'blur(10px)',
   },
   inputContainer: {
     backgroundColor: '#F9FAFB',
