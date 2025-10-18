@@ -48,11 +48,6 @@ export default function LandingPage() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Text style={styles.logoText}>i</Text>
-              </View>
-            </View>
             <View>
               <Text style={styles.appName}>Intent</Text>
               <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
@@ -152,22 +147,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     backgroundColor: 'transparent',
   },
-  logoContainer: {
-    marginRight: 12,
-  },
-  logoCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#EF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   tagline: {
     fontSize: 11,
     fontWeight: '400',
@@ -187,9 +166,9 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   appName: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
-    color: '#EF4444',
+    color: '#1F2937',
     letterSpacing: 2,
   },
   bottomSection: {
