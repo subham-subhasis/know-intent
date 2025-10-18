@@ -10,7 +10,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
-  ImageBackground
+  ImageBackground,
+  Image
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -38,7 +39,7 @@ export default function LandingPage() {
         <ImageBackground
           source={require('@/assets/images/image.png')}
           style={styles.backgroundImage}
-          resizeMode="contain"
+          resizeMode="cover"
         />
 
         <KeyboardAvoidingView
@@ -46,14 +47,21 @@ export default function LandingPage() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
+          <View style={styles.header}>
+            <Image
+              source={require('@/assets/images/Intent.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.appName}>Intent</Text>
+          </View>
+
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.topSection}>
-              <Text style={styles.appName}>Intent</Text>
-            </View>
+            <View style={styles.topSection} />
 
             <View style={styles.bottomSection}>
               <View style={styles.card}>
@@ -121,12 +129,30 @@ export default function LandingPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
   },
   backgroundImage: {
     position: 'absolute',
     width: '100%',
     height: '100%',
+  },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 16,
+    zIndex: 10,
+    backgroundColor: 'transparent',
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
   },
   keyboardView: {
     flex: 1,
@@ -137,16 +163,13 @@ const styles = StyleSheet.create({
   },
   topSection: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    minHeight: 400,
-    paddingTop: 80,
+    minHeight: 300,
   },
   appName: {
-    fontSize: 56,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
-    letterSpacing: -2,
+    color: '#EF4444',
+    letterSpacing: 2,
   },
   bottomSection: {
     flex: 1,
