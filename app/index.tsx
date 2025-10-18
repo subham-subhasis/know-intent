@@ -36,12 +36,10 @@ export default function LandingPage() {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
-          source={{ uri: 'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg' }}
+          source={require('@/assets/images/image.png')}
           style={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          <View style={styles.overlay} />
-        </ImageBackground>
+          resizeMode="contain"
+        />
 
         <KeyboardAvoidingView
           style={styles.keyboardView}
@@ -55,7 +53,6 @@ export default function LandingPage() {
           >
             <View style={styles.topSection}>
               <Text style={styles.appName}>Intent</Text>
-              <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
             </View>
 
             <View style={styles.bottomSection}>
@@ -131,10 +128,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
-  },
   keyboardView: {
     flex: 1,
   },
@@ -144,23 +137,16 @@ const styles = StyleSheet.create({
   },
   topSection: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     minHeight: 400,
-    paddingTop: 60,
+    paddingTop: 80,
   },
   appName: {
     fontSize: 56,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 12,
     letterSpacing: -2,
-  },
-  tagline: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: '#4B5563',
-    letterSpacing: 1,
   },
   bottomSection: {
     flex: 1,
