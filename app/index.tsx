@@ -85,8 +85,7 @@ export default function LandingPage() {
                     <View style={[styles.checkboxBox, agreedToTerms && styles.checkboxChecked]} />
                   </TouchableOpacity>
                   <Text style={styles.checkboxText}>
-                    allow Intent to access your personal information from{' '}
-                    <Text style={styles.underlinedText}>approved sources</Text>
+                    Login as <Text style={styles.usernameText}>{identifier || 'Username'}</Text> profile, You can still switch your profile later.
                   </Text>
                 </View>
 
@@ -101,8 +100,8 @@ export default function LandingPage() {
                   <Text style={styles.buttonText}>Login To Intent</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.signupLink}>
-                  <Text style={styles.signupText}>Setup your Intent</Text>
+                <TouchableOpacity style={styles.secondaryButton}>
+                  <Text style={styles.secondaryButtonText}>Setup your Intent</Text>
                 </TouchableOpacity>
 
                 <View style={styles.legalContainer}>
@@ -237,9 +236,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '400',
   },
-  underlinedText: {
-    textDecorationLine: 'underline',
-    fontWeight: '500',
+  usernameText: {
+    fontWeight: '600',
+    color: '#1F2937',
   },
   button: {
     backgroundColor: '#1F2937',
@@ -275,16 +274,19 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: '500',
   },
-  signupLink: {
-    paddingVertical: 12,
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
   },
-  signupText: {
+  secondaryButtonText: {
+    color: '#4B5563',
     fontSize: 15,
     fontWeight: '500',
-    color: '#4B5563',
-    textDecorationLine: 'underline',
     letterSpacing: 0.2,
   },
 });
