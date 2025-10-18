@@ -37,7 +37,7 @@ export default function LandingPage() {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
-          source={require('@/assets/images/image copy.png')}
+          source={require('@/assets/images/intent-bg.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -53,7 +53,10 @@ export default function LandingPage() {
                 <Text style={styles.logoText}>i</Text>
               </View>
             </View>
-            <Text style={styles.appName}>Intent</Text>
+            <View>
+              <Text style={styles.appName}>Intent</Text>
+              <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+            </View>
           </View>
 
           <ScrollView
@@ -134,8 +137,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     position: 'absolute',
     width: '100%',
-    height: '120%',
-    top: '-20%',
+    height: '100%',
   },
   header: {
     position: 'absolute',
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2D3748',
+    backgroundColor: '#EF4444',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -165,6 +167,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  tagline: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: '#6B7280',
+    letterSpacing: 0.5,
+    marginTop: 2,
   },
   keyboardView: {
     flex: 1,
@@ -180,7 +189,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2D3748',
+    color: '#EF4444',
     letterSpacing: 2,
   },
   bottomSection: {
