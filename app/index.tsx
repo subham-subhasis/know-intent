@@ -100,7 +100,10 @@ export default function LandingPage() {
                   <Text style={styles.buttonText}>Login To Intent</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.secondaryButton}>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => router.push('/signup')}
+                >
                   <Text style={styles.secondaryButtonText}>Setup your Intent</Text>
                 </TouchableOpacity>
 
