@@ -41,7 +41,7 @@ export default function LandingPage() {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
-          source={{ uri: 'https://images.pexels.com/photos/442587/pexels-photo-442587.jpeg' }}
+          source={{ uri: 'https://images.pexels.com/photos/1290141/pexels-photo-1290141.jpeg' }}
           style={styles.backgroundImage}
           resizeMode="cover"
         >
@@ -58,7 +58,10 @@ export default function LandingPage() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.topSection} />
+            <View style={styles.topSection}>
+              <Text style={styles.appName}>Intent</Text>
+              <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+            </View>
 
             <View style={styles.bottomSection}>
               <View style={styles.card}>
@@ -121,7 +124,7 @@ export default function LandingPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: '#F5F5F5',
   },
   backgroundImage: {
     position: 'absolute',
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   keyboardView: {
     flex: 1,
@@ -141,7 +144,29 @@ const styles = StyleSheet.create({
   },
   topSection: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     minHeight: 400,
+    paddingTop: 60,
+  },
+  appName: {
+    fontSize: 56,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    letterSpacing: -2,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  tagline: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#F5F5F5',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   bottomSection: {
     flex: 1,
@@ -212,7 +237,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   button: {
-    backgroundColor: '#8B8B8B',
+    backgroundColor: '#1F2937',
     borderRadius: 12,
     paddingVertical: 18,
     alignItems: 'center',
