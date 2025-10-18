@@ -14,32 +14,55 @@ import {
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
-export default function PasswordPage() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function DateOfBirthPage() {
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const validatePassword = (): boolean => {
+  const validateDate = (): boolean => {
     setError('');
 
-    if (!password.trim()) {
-      setError('Please enter a password');
+    if (!day.trim() || !month.trim() || !year.trim()) {
+      setError('Please enter your complete date of birth');
       return false;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    const dayNum = parseInt(day);
+    const monthNum = parseInt(month);
+    const yearNum = parseInt(year);
+
+    if (isNaN(dayNum) || isNaN(monthNum) || isNaN(yearNum)) {
+      setError('Please enter valid numbers');
       return false;
     }
 
-    if (!confirmPassword.trim()) {
-      setError('Please confirm your password');
+    if (dayNum < 1 || dayNum > 31) {
+      setError('Day must be between 1 and 31');
       return false;
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+    if (monthNum < 1 || monthNum > 12) {
+      setError('Month must be between 1 and 12');
+      return false;
+    }
+
+    const currentYear = new Date().getFullYear();
+    if (yearNum < 1900 || yearNum > currentYear) {
+      setError(`Year must be between 1900 and ${currentYear}`);
+      return false;
+    }
+
+    const age = currentYear - yearNum;
+    if (age < 13) {
+      setError('You must be at least 13 years old');
+      return false;
+    }
+
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    if (dayNum > daysInMonth) {
+      setError(`Invalid day for the selected month`);
       return false;
     }
 
@@ -47,8 +70,7 @@ export default function PasswordPage() {
   };
 
   const handleNext = () => {
-    if (validatePassword()) {
-      router.push('/signup/dateofbirth');
+    if (validateDate()) {
     }
   };
 
@@ -58,6 +80,27 @@ export default function PasswordPage() {
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  const handleDayChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    if (cleaned.length <= 2) {
+      setDay(cleaned);
+    }
+  };
+
+  const handleMonthChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    if (cleaned.length <= 2) {
+      setMonth(cleaned);
+    }
+  };
+
+  const handleYearChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    if (cleaned.length <= 4) {
+      setYear(cleaned);
+    }
   };
 
   return (
@@ -91,46 +134,65 @@ export default function PasswordPage() {
             <View style={styles.bottomSection}>
               <View style={styles.card}>
                 <View style={styles.titleSection}>
-                  <Text style={styles.title}>Create your password</Text>
+                  <Text style={styles.title}>What's your date of birth?</Text>
                   <Text style={styles.infoText}>
-                    Create a password at least six letters or numbers. Its should be something which others can not guess.{' '}
-                    <Text style={styles.boldText}>Make it as strong as you are.</Text>
+                    Use your own date of birth even if it's for business or intended user is someone else.{' '}
+                    <Text style={styles.boldText}>
+                      While creating a profile under it, we will ask the same question again to show relevant suggestions after successful login.
+                    </Text>
                   </Text>
                 </View>
 
-                <View style={styles.inputSection}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
+                <View style={styles.dateInputContainer}>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="DD"
+                      placeholderTextColor="#9CA3AF"
+                      value={day}
+                      onChangeText={handleDayChange}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                    />
+                  </View>
+                  <Text style={styles.dateSeparator}>/</Text>
+                  <View style={styles.dateInputWrapper}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="MM"
+                      placeholderTextColor="#9CA3AF"
+                      value={month}
+                      onChangeText={handleMonthChange}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                    />
+                  </View>
+                  <Text style={styles.dateSeparator}>/</Text>
+                  <View style={[styles.dateInputWrapper, styles.yearInputWrapper]}>
+                    <TextInput
+                      style={styles.dateInput}
+                      placeholder="YYYY"
+                      placeholderTextColor="#9CA3AF"
+                      value={year}
+                      onChangeText={handleYearChange}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                    />
+                  </View>
                 </View>
 
-                <View style={styles.inputSection}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
-                </View>
+                {error ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
 
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (!password || !confirmPassword) && styles.buttonDisabled
+                    (!day || !month || !year) && styles.buttonDisabled
                   ]}
-                  disabled={!password || !confirmPassword}
+                  disabled={!day || !month || !year}
                   onPress={handleNext}
                   activeOpacity={0.8}
                 >
@@ -238,10 +300,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
-  inputSection: {
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
   },
-  input: {
+  dateInputWrapper: {
+    flex: 1,
+    maxWidth: 80,
+  },
+  yearInputWrapper: {
+    maxWidth: 120,
+  },
+  dateInput: {
     fontSize: 18,
     fontWeight: '500',
     color: '#1F2937',
@@ -253,10 +325,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
   },
+  dateSeparator: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    marginHorizontal: 8,
+  },
+  errorContainer: {
+    marginBottom: 24,
+  },
   errorText: {
     fontSize: 13,
     color: '#EF4444',
-    marginTop: 8,
     textAlign: 'center',
   },
   button: {
