@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
 export default function LandingPage() {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const router = useRouter();
 
@@ -32,16 +32,11 @@ export default function LandingPage() {
     Keyboard.dismiss();
   };
 
-  const formatPhoneNumber = (text: string) => {
-    const cleaned = text.replace(/\D/g, '');
-    setPhoneNumber(cleaned);
-  };
-
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
-          source={{ uri: 'https://images.pexels.com/photos/1290141/pexels-photo-1290141.jpeg' }}
+          source={{ uri: 'https://images.pexels.com/photos/256541/pexels-photo-256541.jpeg' }}
           style={styles.backgroundImage}
           resizeMode="cover"
         >
@@ -66,15 +61,16 @@ export default function LandingPage() {
             <View style={styles.bottomSection}>
               <View style={styles.card}>
                 <View style={styles.inputSection}>
-                  <Text style={styles.inputLabel}>YOUR MOBILE NUMBER</Text>
+                  <Text style={styles.inputLabel}>USERNAME OR PHONE NUMBER</Text>
                   <TextInput
-                    style={styles.phoneInput}
-                    placeholder="88955 23032"
+                    style={styles.identifierInput}
+                    placeholder=""
                     placeholderTextColor="#D1D5DB"
-                    value={phoneNumber}
-                    onChangeText={formatPhoneNumber}
-                    keyboardType="phone-pad"
-                    maxLength={10}
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                    keyboardType="default"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
 
@@ -94,12 +90,16 @@ export default function LandingPage() {
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (!phoneNumber || !agreedToTerms) && styles.buttonDisabled
+                    (!identifier || !agreedToTerms) && styles.buttonDisabled
                   ]}
-                  disabled={!phoneNumber || !agreedToTerms}
+                  disabled={!identifier || !agreedToTerms}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.buttonText}>Setup your membership</Text>
+                  <Text style={styles.buttonText}>Login To Intent</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.signupLink}>
+                  <Text style={styles.signupText}>Setup your Intent</Text>
                 </TouchableOpacity>
 
                 <View style={styles.legalContainer}>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
   },
   keyboardView: {
     flex: 1,
@@ -152,21 +152,15 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 56,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#1F2937',
     marginBottom: 12,
     letterSpacing: -2,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
   },
   tagline: {
     fontSize: 18,
     fontWeight: '400',
-    color: '#F5F5F5',
+    color: '#4B5563',
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   bottomSection: {
     flex: 1,
@@ -195,13 +189,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  phoneInput: {
-    fontSize: 36,
-    fontWeight: '700',
+  identifierInput: {
+    fontSize: 32,
+    fontWeight: '600',
     color: '#1F2937',
     textAlign: 'center',
-    letterSpacing: 2,
-    paddingVertical: 8,
+    letterSpacing: 1,
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: '#E5E7EB',
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -269,5 +265,17 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     lineHeight: 16,
     fontWeight: '500',
+  },
+  signupLink: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  signupText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#4B5563',
+    textDecorationLine: 'underline',
+    letterSpacing: 0.2,
   },
 });
