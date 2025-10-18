@@ -169,7 +169,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 12,
-    backdropFilter: 'blur(10px)',
   },
   inputContainer: {
     backgroundColor: '#F9FAFB',
@@ -191,7 +190,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
-    outlineStyle: 'none',
   },
   checkboxContainer: {
     flexDirection: 'row',
