@@ -37,7 +37,7 @@ export default function LandingPage() {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
-          source={require('@/assets/images/image.png')}
+          source={require('@/assets/images/image copy.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />
@@ -48,11 +48,11 @@ export default function LandingPage() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={styles.header}>
-            <Image
-              source={require('@/assets/images/Intent.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoText}>i</Text>
+              </View>
+            </View>
             <Text style={styles.appName}>Intent</Text>
           </View>
 
@@ -149,10 +149,21 @@ const styles = StyleSheet.create({
     zIndex: 10,
     backgroundColor: 'transparent',
   },
-  logo: {
+  logoContainer: {
+    marginRight: 12,
+  },
+  logoCircle: {
     width: 40,
     height: 40,
-    marginRight: 12,
+    borderRadius: 20,
+    backgroundColor: '#2D3748',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   keyboardView: {
     flex: 1,
@@ -168,7 +179,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#EF4444',
+    color: '#2D3748',
     letterSpacing: 2,
   },
   bottomSection: {
@@ -178,14 +189,14 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 10,
   },
   inputSection: {
     marginBottom: 28,
