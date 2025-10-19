@@ -10,8 +10,10 @@ import {
   Keyboard,
   ScrollView,
   ImageBackground,
+  Animated,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function SignupPage() {
@@ -20,6 +22,7 @@ export default function SignupPage() {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const spinValue = useRef(new Animated.Value(0)).current;
 
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
@@ -61,6 +64,29 @@ export default function SignupPage() {
     setShowEmailInput(true);
     setError('');
   };
+
+  const handleClear = () => {
+    spinValue.setValue(0);
+    Animated.timing(spinValue, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValue.setValue(0);
+    });
+
+    if (showEmailInput) {
+      setEmailAddress('');
+    } else {
+      setPhoneNumber('');
+    }
+    setError('');
+  };
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   const handleBackToLogin = () => {
     router.back();
@@ -112,16 +138,29 @@ export default function SignupPage() {
                 </View>
 
                 <View style={styles.inputSection}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={showEmailInput ? 'email@example.com' : '+1 234 567 8900'}
-                    placeholderTextColor="#9CA3AF"
-                    value={showEmailInput ? emailAddress : phoneNumber}
-                    onChangeText={showEmailInput ? setEmailAddress : setPhoneNumber}
-                    keyboardType={showEmailInput ? 'email-address' : 'phone-pad'}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder={showEmailInput ? 'email@example.com' : '+1 234 567 8900'}
+                      placeholderTextColor="#9CA3AF"
+                      value={showEmailInput ? emailAddress : phoneNumber}
+                      onChangeText={showEmailInput ? setEmailAddress : setPhoneNumber}
+                      keyboardType={showEmailInput ? 'email-address' : 'phone-pad'}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {(showEmailInput ? emailAddress : phoneNumber) ? (
+                      <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={handleClear}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                          <X size={20} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                   {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 </View>
 
@@ -246,17 +285,28 @@ const styles = StyleSheet.create({
   inputSection: {
     marginBottom: 24,
   },
+  inputWrapper: {
+    position: 'relative',
+  },
   input: {
     fontSize: 18,
     fontWeight: '500',
     color: '#1F2937',
     textAlign: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 44,
     borderWidth: 2,
     borderColor: '#E5E7EB',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    padding: 4,
+    zIndex: 1,
   },
   errorText: {
     fontSize: 13,

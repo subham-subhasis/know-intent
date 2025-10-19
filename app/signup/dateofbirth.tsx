@@ -10,8 +10,10 @@ import {
   Keyboard,
   ScrollView,
   ImageBackground,
+  Animated,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function DateOfBirthPage() {
@@ -20,6 +22,9 @@ export default function DateOfBirthPage() {
   const [year, setYear] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const spinValueDay = useRef(new Animated.Value(0)).current;
+  const spinValueMonth = useRef(new Animated.Value(0)).current;
+  const spinValueYear = useRef(new Animated.Value(0)).current;
 
   const validateDate = (): boolean => {
     setError('');
@@ -103,6 +108,60 @@ export default function DateOfBirthPage() {
     }
   };
 
+  const handleClearDay = () => {
+    spinValueDay.setValue(0);
+    Animated.timing(spinValueDay, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValueDay.setValue(0);
+    });
+    setDay('');
+    setError('');
+  };
+
+  const handleClearMonth = () => {
+    spinValueMonth.setValue(0);
+    Animated.timing(spinValueMonth, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValueMonth.setValue(0);
+    });
+    setMonth('');
+    setError('');
+  };
+
+  const handleClearYear = () => {
+    spinValueYear.setValue(0);
+    Animated.timing(spinValueYear, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValueYear.setValue(0);
+    });
+    setYear('');
+    setError('');
+  };
+
+  const spinDay = spinValueDay.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const spinMonth = spinValueMonth.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const spinYear = spinValueYear.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -154,6 +213,17 @@ export default function DateOfBirthPage() {
                       keyboardType="number-pad"
                       maxLength={2}
                     />
+                    {day ? (
+                      <TouchableOpacity
+                        style={styles.dateClearButton}
+                        onPress={handleClearDay}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spinDay }] }}>
+                          <X size={16} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                   <Text style={styles.dateSeparator}>/</Text>
                   <View style={styles.dateInputWrapper}>
@@ -166,6 +236,17 @@ export default function DateOfBirthPage() {
                       keyboardType="number-pad"
                       maxLength={2}
                     />
+                    {month ? (
+                      <TouchableOpacity
+                        style={styles.dateClearButton}
+                        onPress={handleClearMonth}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spinMonth }] }}>
+                          <X size={16} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                   <Text style={styles.dateSeparator}>/</Text>
                   <View style={[styles.dateInputWrapper, styles.yearInputWrapper]}>
@@ -178,6 +259,17 @@ export default function DateOfBirthPage() {
                       keyboardType="number-pad"
                       maxLength={4}
                     />
+                    {year ? (
+                      <TouchableOpacity
+                        style={styles.dateClearButton}
+                        onPress={handleClearYear}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spinYear }] }}>
+                          <X size={16} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 </View>
 
@@ -309,6 +401,7 @@ const styles = StyleSheet.create({
   dateInputWrapper: {
     flex: 1,
     maxWidth: 80,
+    position: 'relative',
   },
   yearInputWrapper: {
     maxWidth: 120,
@@ -319,11 +412,19 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     textAlign: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 28,
     borderWidth: 2,
     borderColor: '#E5E7EB',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
+  },
+  dateClearButton: {
+    position: 'absolute',
+    right: 4,
+    top: '50%',
+    transform: [{ translateY: -8 }],
+    padding: 2,
+    zIndex: 1,
   },
   dateSeparator: {
     fontSize: 24,

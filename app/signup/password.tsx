@@ -10,8 +10,10 @@ import {
   Keyboard,
   ScrollView,
   ImageBackground,
+  Animated,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 export default function PasswordPage() {
@@ -19,6 +21,8 @@ export default function PasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const spinValuePassword = useRef(new Animated.Value(0)).current;
+  const spinValueConfirm = useRef(new Animated.Value(0)).current;
 
   const validatePassword = (): boolean => {
     setError('');
@@ -60,6 +64,42 @@ export default function PasswordPage() {
     Keyboard.dismiss();
   };
 
+  const handleClearPassword = () => {
+    spinValuePassword.setValue(0);
+    Animated.timing(spinValuePassword, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValuePassword.setValue(0);
+    });
+    setPassword('');
+    setError('');
+  };
+
+  const handleClearConfirmPassword = () => {
+    spinValueConfirm.setValue(0);
+    Animated.timing(spinValueConfirm, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      spinValueConfirm.setValue(0);
+    });
+    setConfirmPassword('');
+    setError('');
+  };
+
+  const spinPassword = spinValuePassword.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const spinConfirm = spinValueConfirm.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -99,29 +139,55 @@ export default function PasswordPage() {
                 </View>
 
                 <View style={styles.inputSection}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Password"
+                      placeholderTextColor="#9CA3AF"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {password ? (
+                      <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={handleClearPassword}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spinPassword }] }}>
+                          <X size={20} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                 </View>
 
                 <View style={styles.inputSection}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm Password"
-                    placeholderTextColor="#9CA3AF"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Confirm Password"
+                      placeholderTextColor="#9CA3AF"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {confirmPassword ? (
+                      <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={handleClearConfirmPassword}
+                        activeOpacity={0.7}
+                      >
+                        <Animated.View style={{ transform: [{ rotate: spinConfirm }] }}>
+                          <X size={20} color="#6B7280" strokeWidth={2.5} />
+                        </Animated.View>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
                   {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 </View>
 
@@ -241,17 +307,28 @@ const styles = StyleSheet.create({
   inputSection: {
     marginBottom: 24,
   },
+  inputWrapper: {
+    position: 'relative',
+  },
   input: {
     fontSize: 18,
     fontWeight: '500',
     color: '#1F2937',
     textAlign: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingHorizontal: 44,
     borderWidth: 2,
     borderColor: '#E5E7EB',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    padding: 4,
+    zIndex: 1,
   },
   errorText: {
     fontSize: 13,
