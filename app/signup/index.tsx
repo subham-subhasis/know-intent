@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 export default function SignupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
-  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
   const spinValue = useRef(new Animated.Value(0)).current;
@@ -62,6 +62,11 @@ export default function SignupPage() {
 
   const handleSwitchToEmail = () => {
     setShowEmailInput(true);
+    setError('');
+  };
+
+  const handleSwitchToPhone = () => {
+    setShowEmailInput(false);
     setError('');
   };
 
@@ -176,7 +181,14 @@ export default function SignupPage() {
                   <Text style={styles.buttonText}>Next</Text>
                 </TouchableOpacity>
 
-                {!showEmailInput && (
+                {showEmailInput ? (
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={handleSwitchToPhone}
+                  >
+                    <Text style={styles.secondaryButtonText}>Sign up with mobile number</Text>
+                  </TouchableOpacity>
+                ) : (
                   <TouchableOpacity
                     style={styles.secondaryButton}
                     onPress={handleSwitchToEmail}
