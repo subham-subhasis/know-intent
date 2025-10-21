@@ -218,15 +218,17 @@ export default function HomePage() {
                   />
                   <View style={styles.statsOverlay}>
                     <View style={styles.statItem}>
-                      <ThumbsUp size={14} color="#FFFFFF" strokeWidth={2} />
+                      <ThumbsUp size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text style={styles.statText}>{formatCount(video.likes)}</Text>
                     </View>
+                    <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                      <ThumbsDown size={14} color="#FFFFFF" strokeWidth={2} />
+                      <ThumbsDown size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text style={styles.statText}>{formatCount(video.dislikes)}</Text>
                     </View>
+                    <View style={styles.statDivider} />
                     <View style={styles.statItem}>
-                      <GitBranch size={14} color="#FFFFFF" strokeWidth={2} />
+                      <GitBranch size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text style={styles.statText}>{formatCount(video.spiderChains)}</Text>
                     </View>
                   </View>
@@ -390,30 +392,42 @@ const styles = StyleSheet.create({
   },
   statsOverlay: {
     position: 'absolute',
-    top: 12,
+    bottom: 12,
     left: 12,
+    right: 12,
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 4,
   },
   statText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
     color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   durationBadge: {
     position: 'absolute',
-    bottom: 12,
+    top: 12,
     right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
