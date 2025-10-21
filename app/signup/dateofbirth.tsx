@@ -76,6 +76,7 @@ export default function DateOfBirthPage() {
 
   const handleNext = () => {
     if (validateDate()) {
+      router.push('/signup/kpiselection');
     }
   };
 
