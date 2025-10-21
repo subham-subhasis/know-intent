@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, MessageCircle, Sparkles, ExternalLink } from 'lucide-react-native';
+import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
+import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,6 +33,9 @@ const VIDEO_CARDS = [
     creator: 'Tech Explained',
     views: '1.2M',
     duration: '12:45',
+    likes: 45200,
+    dislikes: 320,
+    spiderChains: 1240,
   },
   {
     id: '2',
@@ -39,6 +43,9 @@ const VIDEO_CARDS = [
     creator: 'Business Insider',
     views: '890K',
     duration: '15:30',
+    likes: 32100,
+    dislikes: 450,
+    spiderChains: 890,
   },
   {
     id: '3',
@@ -46,6 +53,9 @@ const VIDEO_CARDS = [
     creator: 'Wellness Guide',
     views: '2.1M',
     duration: '8:20',
+    likes: 78900,
+    dislikes: 210,
+    spiderChains: 2340,
   },
   {
     id: '4',
@@ -53,6 +63,9 @@ const VIDEO_CARDS = [
     creator: 'Science Today',
     views: '3.5M',
     duration: '20:15',
+    likes: 125000,
+    dislikes: 890,
+    spiderChains: 4560,
   },
   {
     id: '5',
@@ -60,6 +73,9 @@ const VIDEO_CARDS = [
     creator: 'Creative Studio',
     views: '650K',
     duration: '25:10',
+    likes: 28700,
+    dislikes: 180,
+    spiderChains: 670,
   },
 ];
 
@@ -83,6 +99,7 @@ const AD_VARIANTS = [
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -91,6 +108,13 @@ export default function HomePage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const formatCount = (count: number) => {
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
 
   const renderAdSection = (index: number) => {
     const adData = AD_VARIANTS[index % AD_VARIANTS.length];
@@ -144,6 +168,13 @@ export default function HomePage() {
             <MessageCircle size={24} color="#1F2937" strokeWidth={2} />
             <View style={styles.chatDot} />
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.profileButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/settings')}
+          >
+            <User size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -185,6 +216,20 @@ export default function HomePage() {
                     end={{ x: 1, y: 1 }}
                     style={styles.thumbnailGradient}
                   />
+                  <View style={styles.statsOverlay}>
+                    <View style={styles.statItem}>
+                      <ThumbsUp size={14} color="#FFFFFF" strokeWidth={2} />
+                      <Text style={styles.statText}>{formatCount(video.likes)}</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <ThumbsDown size={14} color="#FFFFFF" strokeWidth={2} />
+                      <Text style={styles.statText}>{formatCount(video.dislikes)}</Text>
+                    </View>
+                    <View style={styles.statItem}>
+                      <GitBranch size={14} color="#FFFFFF" strokeWidth={2} />
+                      <Text style={styles.statText}>{formatCount(video.spiderChains)}</Text>
+                    </View>
+                  </View>
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
                   </View>
@@ -258,6 +303,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     borderWidth: 1.5,
     borderColor: '#FFFFFF',
+  },
+  profileButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
   },
   appName: {
     fontSize: 28,
@@ -333,6 +387,27 @@ const styles = StyleSheet.create({
   thumbnailGradient: {
     width: '100%',
     height: '100%',
+  },
+  statsOverlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   durationBadge: {
     position: 'absolute',

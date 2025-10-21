@@ -5,23 +5,186 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import { Settings, Bell, Bookmark, Heart, Clock } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ThumbsUp, ThumbsDown, GitBranch, Eye } from 'lucide-react-native';
 
-const MENU_ITEMS = [
-  { id: '1', icon: Bookmark, label: 'Saved Videos', count: '12' },
-  { id: '2', icon: Heart, label: 'Liked Videos', count: '45' },
-  { id: '3', icon: Clock, label: 'Watch History', count: '234' },
-  { id: '4', icon: Bell, label: 'Notifications', count: '3' },
-  { id: '5', icon: Settings, label: 'Settings', count: null },
+const { width } = Dimensions.get('window');
+
+const USER_VIDEOS = [
+  {
+    id: '1',
+    title: 'My Machine Learning Journey',
+    views: '245K',
+    likes: 12300,
+    dislikes: 120,
+    spiderChains: 450,
+    gradient: ['#667eea', '#764ba2'],
+    responses: [
+      {
+        id: '1-1',
+        title: 'Response: Building on your ML concepts',
+        creator: 'Tech Expert',
+        gradient: ['#f093fb', '#f5576c'],
+        position: { top: -40, left: 20 },
+        responses: [
+          {
+            id: '1-1-1',
+            title: 'Deep dive into neural networks',
+            creator: 'AI Researcher',
+            gradient: ['#4facfe', '#00f2fe'],
+            position: { top: -35, right: 15 },
+          },
+        ],
+      },
+      {
+        id: '1-2',
+        title: 'Alternative approach to ML',
+        creator: 'Data Scientist',
+        gradient: ['#43e97b', '#38f9d7'],
+        position: { top: -40, right: 20 },
+      },
+    ],
+  },
+  {
+    id: '2',
+    title: 'Startup Tips for Beginners',
+    views: '180K',
+    likes: 8900,
+    dislikes: 90,
+    spiderChains: 320,
+    gradient: ['#fa709a', '#fee140'],
+    responses: [
+      {
+        id: '2-1',
+        title: 'Funding strategies explained',
+        creator: 'Entrepreneur',
+        gradient: ['#30cfd0', '#330867'],
+        position: { top: -45, left: 25 },
+      },
+    ],
+  },
+  {
+    id: '3',
+    title: 'Healthy Living Guide',
+    views: '512K',
+    likes: 28700,
+    dislikes: 210,
+    spiderChains: 890,
+    gradient: ['#a8edea', '#fed6e3'],
+    responses: [
+      {
+        id: '3-1',
+        title: 'Nutrition facts breakdown',
+        creator: 'Dietitian',
+        gradient: ['#ff9a9e', '#fecfef'],
+        position: { top: -40, left: 30 },
+        responses: [
+          {
+            id: '3-1-1',
+            title: 'Meal planning tips',
+            creator: 'Chef',
+            gradient: ['#ffecd2', '#fcb69f'],
+            position: { top: -35, left: 20 },
+          },
+        ],
+      },
+      {
+        id: '3-2',
+        title: 'Exercise routine complementing this',
+        creator: 'Fitness Coach',
+        gradient: ['#667eea', '#764ba2'],
+        position: { top: -40, right: 30 },
+      },
+    ],
+  },
 ];
 
 export default function ProfilePage() {
+  const formatCount = (count: number) => {
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  };
+
+  const renderSpiderNode = (video: any, depth: number = 0, index: number = 0) => {
+    const isRoot = depth === 0;
+    const cardWidth = isRoot ? width - 32 : width * 0.6;
+    const cardHeight = isRoot ? 200 : 120;
+
+    return (
+      <View
+        key={video.id}
+        style={[
+          styles.spiderNode,
+          isRoot ? styles.rootNode : styles.responseNode,
+          { width: cardWidth },
+        ]}
+      >
+        <TouchableOpacity
+          style={[styles.spiderCard, { height: cardHeight }]}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={video.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.spiderCardGradient}
+          >
+            <View style={styles.spiderCardOverlay}>
+              <Text style={[styles.spiderTitle, isRoot && styles.rootTitle]} numberOfLines={2}>
+                {video.title}
+              </Text>
+              {!isRoot && video.creator && (
+                <Text style={styles.spiderCreator}>{video.creator}</Text>
+              )}
+              {isRoot && (
+                <View style={styles.rootStats}>
+                  <View style={styles.rootStatItem}>
+                    <Eye size={16} color="#FFFFFF" strokeWidth={2} />
+                    <Text style={styles.rootStatText}>{video.views}</Text>
+                  </View>
+                  <View style={styles.rootStatItem}>
+                    <ThumbsUp size={16} color="#FFFFFF" strokeWidth={2} />
+                    <Text style={styles.rootStatText}>{formatCount(video.likes)}</Text>
+                  </View>
+                  <View style={styles.rootStatItem}>
+                    <GitBranch size={16} color="#FFFFFF" strokeWidth={2} />
+                    <Text style={styles.rootStatText}>{formatCount(video.spiderChains)}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {video.responses && video.responses.length > 0 && (
+          <View style={styles.responsesContainer}>
+            {video.responses.map((response: any, idx: number) => (
+              <View
+                key={response.id}
+                style={[
+                  styles.responseWrapper,
+                  response.position,
+                ]}
+              >
+                <View style={styles.connectionLine} />
+                {renderSpiderNode(response, depth + 1, idx)}
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.appName}>Profile</Text>
-        <Text style={styles.tagline}>Manage your account</Text>
+        <Text style={styles.appName}>My Profile</Text>
+        <Text style={styles.tagline}>Your content and spider chains</Text>
       </View>
 
       <ScrollView
@@ -29,40 +192,39 @@ export default function ProfilePage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>U</Text>
-            </View>
+        <View style={styles.profileInfo}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>U</Text>
           </View>
           <Text style={styles.userName}>User Name</Text>
-          <Text style={styles.userEmail}>user@example.com</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>{USER_VIDEOS.length}</Text>
+              <Text style={styles.statLabel}>Videos</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>937K</Text>
+              <Text style={styles.statLabel}>Total Views</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>1.6K</Text>
+              <Text style={styles.statLabel}>Spider Chains</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.menuSection}>
-          {MENU_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <TouchableOpacity key={item.id} style={styles.menuItem} activeOpacity={0.7}>
-                <View style={styles.menuItemLeft}>
-                  <View style={styles.iconContainer}>
-                    <Icon size={22} color="#1F2937" strokeWidth={2} />
-                  </View>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
-                </View>
-                {item.count && (
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countText}>{item.count}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <View style={styles.spiderSection}>
+          <Text style={styles.sectionTitle}>Your Spider Chains</Text>
+          <Text style={styles.sectionSubtitle}>
+            Your videos and the trending responses they've inspired
+          </Text>
 
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8}>
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+          {USER_VIDEOS.map((video, index) => (
+            <View key={video.id} style={styles.spiderChainContainer}>
+              {renderSpiderNode(video)}
+            </View>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );
@@ -76,7 +238,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 16,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -100,108 +262,140 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: Platform.OS === 'ios' ? 110 : 90,
   },
-  profileSection: {
+  profileInfo: {
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
-  avatarContainer: {
-    marginBottom: 16,
-  },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    marginBottom: 12,
   },
   avatarText: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   userName: {
-    fontSize: 22,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  spiderSection: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 4,
   },
-  userEmail: {
-    fontSize: 14,
+  sectionSubtitle: {
+    fontSize: 13,
     fontWeight: '500',
     color: '#6B7280',
+    marginBottom: 24,
+    lineHeight: 18,
   },
-  menuSection: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+  spiderChainContainer: {
+    marginBottom: 100,
+    position: 'relative',
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+  spiderNode: {
+    position: 'relative',
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+  rootNode: {
+    marginBottom: 20,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+  responseNode: {
+    marginTop: 10,
   },
-  menuItemLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
+  spiderCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  countBadge: {
-    minWidth: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#1F2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
+  spiderCardGradient: {
+    flex: 1,
+    justifyContent: 'flex-end',
   },
-  countText: {
-    fontSize: 12,
+  spiderCardOverlay: {
+    padding: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  spiderTitle: {
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
   },
-  logoutButton: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    paddingVertical: 16,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FECACA',
-  },
-  logoutText: {
+  rootTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#DC2626',
+    marginBottom: 12,
+  },
+  spiderCreator: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  rootStats: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 8,
+  },
+  rootStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rootStatText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  responsesContainer: {
+    position: 'relative',
+    marginTop: 20,
+  },
+  responseWrapper: {
+    position: 'absolute',
+  },
+  connectionLine: {
+    position: 'absolute',
+    top: -20,
+    left: '50%',
+    width: 2,
+    height: 20,
+    backgroundColor: '#D1D5DB',
   },
 });
