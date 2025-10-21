@@ -8,7 +8,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 const MONTHS = [
@@ -16,14 +16,13 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 export default function DateOfBirthPage() {
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(today);
-  const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempMonth, setTempMonth] = useState(today.getMonth());
+  const [tempYear, setTempYear] = useState(today.getFullYear());
+  const [tempDay, setTempDay] = useState(today.getDate());
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -31,74 +30,15 @@ export default function DateOfBirthPage() {
     return new Date(year, month + 1, 0).getDate();
   };
 
-  const getFirstDayOfMonth = (month: number, year: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const handleDateSelect = (day: number) => {
-    const newDate = new Date(currentYear, currentMonth, day);
+  const handleConfirmDate = () => {
+    const newDate = new Date(tempYear, tempMonth, tempDay);
     setSelectedDate(newDate);
+    setShowPicker(false);
     setError('');
-  };
-
-  const handleMonthSelect = (monthIndex: number) => {
-    setCurrentMonth(monthIndex);
-    setViewMode('day');
-  };
-
-  const handleYearSelect = (year: number) => {
-    setCurrentYear(year);
-    setViewMode('month');
-  };
-
-  const handlePrevious = () => {
-    if (viewMode === 'day') {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    } else if (viewMode === 'year') {
-      setCurrentYear(currentYear - 12);
-    }
   };
 
   const handleNext = () => {
-    if (viewMode === 'day') {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    } else if (viewMode === 'year') {
-      setCurrentYear(currentYear + 12);
-    }
-  };
-
-  const validateAndProceed = () => {
     setError('');
-
-    const age = today.getFullYear() - selectedDate.getFullYear();
-    const monthDiff = today.getMonth() - selectedDate.getMonth();
-    const dayDiff = today.getDate() - selectedDate.getDate();
-
-    let actualAge = age;
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-      actualAge--;
-    }
-
-    if (actualAge < 13) {
-      setError('You must be at least 13 years old');
-      return;
-    }
-
-    if (selectedDate > today) {
-      setError('Date cannot be in the future');
-      return;
-    }
-
     router.push('/signup/kpiselection');
   };
 
@@ -106,110 +46,75 @@ export default function DateOfBirthPage() {
     router.push('/');
   };
 
-  const renderDayView = () => {
-    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+  const renderDayPicker = () => {
+    const daysInMonth = getDaysInMonth(tempMonth, tempYear);
     const days = [];
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<View key={`empty-${i}`} style={styles.dayCell} />);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const isSelected =
-        selectedDate.getDate() === day &&
-        selectedDate.getMonth() === currentMonth &&
-        selectedDate.getFullYear() === currentYear;
-
-      const isToday =
-        today.getDate() === day &&
-        today.getMonth() === currentMonth &&
-        today.getFullYear() === currentYear;
-
+    for (let i = 1; i <= daysInMonth; i++) {
       days.push(
         <TouchableOpacity
-          key={day}
-          style={[
-            styles.dayCell,
-            isSelected && styles.selectedCell,
-            isToday && !isSelected && styles.todayCell
-          ]}
-          onPress={() => handleDateSelect(day)}
+          key={i}
+          style={[styles.pickerItem, tempDay === i && styles.pickerItemSelected]}
+          onPress={() => setTempDay(i)}
           activeOpacity={0.7}
         >
-          <Text style={[
-            styles.dayText,
-            isSelected && styles.selectedText,
-            isToday && !isSelected && styles.todayText
-          ]}>
-            {day}
+          <Text style={[styles.pickerItemText, tempDay === i && styles.pickerItemTextSelected]}>
+            {i}
           </Text>
         </TouchableOpacity>
       );
     }
 
     return (
-      <View>
-        <View style={styles.daysOfWeekContainer}>
-          {DAYS_OF_WEEK.map(day => (
-            <View key={day} style={styles.dayOfWeekCell}>
-              <Text style={styles.dayOfWeekText}>{day}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.daysGrid}>{days}</View>
-      </View>
+      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
+        {days}
+      </ScrollView>
     );
   };
 
-  const renderMonthView = () => {
+  const renderMonthPicker = () => {
     return (
-      <View style={styles.monthsGrid}>
-        {MONTHS.map((month, index) => {
-          const isSelected =
-            currentMonth === index &&
-            selectedDate.getFullYear() === currentYear;
-
-          return (
-            <TouchableOpacity
-              key={month}
-              style={[styles.monthCell, isSelected && styles.selectedCell]}
-              onPress={() => handleMonthSelect(index)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.monthText, isSelected && styles.selectedText]}>
-                {month.substring(0, 3)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
+        {MONTHS.map((month, index) => (
+          <TouchableOpacity
+            key={month}
+            style={[styles.pickerItem, tempMonth === index && styles.pickerItemSelected]}
+            onPress={() => setTempMonth(index)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.pickerItemText, tempMonth === index && styles.pickerItemTextSelected]}>
+              {month}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     );
   };
 
-  const renderYearView = () => {
-    const startYear = Math.floor(currentYear / 12) * 12;
+  const renderYearPicker = () => {
     const years = [];
+    const currentYear = new Date().getFullYear();
 
-    for (let i = 0; i < 12; i++) {
-      const year = startYear + i;
-      const isSelected = selectedDate.getFullYear() === year;
-
+    for (let i = currentYear; i >= 1900; i--) {
       years.push(
         <TouchableOpacity
-          key={year}
-          style={[styles.yearCell, isSelected && styles.selectedCell]}
-          onPress={() => handleYearSelect(year)}
+          key={i}
+          style={[styles.pickerItem, tempYear === i && styles.pickerItemSelected]}
+          onPress={() => setTempYear(i)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.yearText, isSelected && styles.selectedText]}>
-            {year}
+          <Text style={[styles.pickerItemText, tempYear === i && styles.pickerItemTextSelected]}>
+            {i}
           </Text>
         </TouchableOpacity>
       );
     }
 
-    return <View style={styles.yearsGrid}>{years}</View>;
+    return (
+      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
+        {years}
+      </ScrollView>
+    );
   };
 
   return (
@@ -227,13 +132,11 @@ export default function DateOfBirthPage() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.topSection} />
-
-        <View style={styles.bottomSection}>
+      <View style={styles.contentWrapper}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.card}>
             <View style={styles.titleSection}>
               <Text style={styles.title}>What's your date of birth?</Text>
@@ -245,75 +148,42 @@ export default function DateOfBirthPage() {
               </Text>
             </View>
 
-            <View style={styles.calendarContainer}>
-              <View style={styles.calendarHeader}>
-                <TouchableOpacity
-                  style={styles.navButton}
-                  onPress={handlePrevious}
-                  activeOpacity={0.7}
-                >
-                  <ChevronLeft size={24} color="#1F2937" strokeWidth={2} />
-                </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowPicker(!showPicker)}
+              activeOpacity={0.8}
+            >
+              <Calendar size={20} color="#6B7280" strokeWidth={2} />
+              <Text style={styles.dateButtonText}>
+                {selectedDate.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </Text>
+            </TouchableOpacity>
 
-                <View style={styles.headerTextContainer}>
-                  {viewMode === 'day' && (
-                    <>
-                      <TouchableOpacity
-                        onPress={() => setViewMode('month')}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.headerText}>
-                          {MONTHS[currentMonth]}
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => setViewMode('year')}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.headerText}>{currentYear}</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                  {viewMode === 'month' && (
-                    <TouchableOpacity
-                      onPress={() => setViewMode('year')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.headerText}>{currentYear}</Text>
-                    </TouchableOpacity>
-                  )}
-                  {viewMode === 'year' && (
-                    <Text style={styles.headerText}>
-                      {Math.floor(currentYear / 12) * 12} - {Math.floor(currentYear / 12) * 12 + 11}
-                    </Text>
-                  )}
+            {showPicker && (
+              <View style={styles.pickerContainer}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerHeaderText}>Select Date</Text>
+                </View>
+
+                <View style={styles.pickerRow}>
+                  {renderDayPicker()}
+                  {renderMonthPicker()}
+                  {renderYearPicker()}
                 </View>
 
                 <TouchableOpacity
-                  style={styles.navButton}
-                  onPress={handleNext}
-                  activeOpacity={0.7}
+                  style={styles.confirmButton}
+                  onPress={handleConfirmDate}
+                  activeOpacity={0.8}
                 >
-                  <ChevronRight size={24} color="#1F2937" strokeWidth={2} />
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
                 </TouchableOpacity>
               </View>
-
-              {viewMode === 'day' && renderDayView()}
-              {viewMode === 'month' && renderMonthView()}
-              {viewMode === 'year' && renderYearView()}
-
-              <View style={styles.selectedDateContainer}>
-                <Text style={styles.selectedDateLabel}>Selected Date:</Text>
-                <Text style={styles.selectedDateText}>
-                  {selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Text>
-              </View>
-            </View>
+            )}
 
             {error ? (
               <View style={styles.errorContainer}>
@@ -323,7 +193,7 @@ export default function DateOfBirthPage() {
 
             <TouchableOpacity
               style={styles.button}
-              onPress={validateAndProceed}
+              onPress={handleNext}
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>Next</Text>
@@ -339,8 +209,8 @@ export default function DateOfBirthPage() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </View>
   );
 }
@@ -381,19 +251,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
   },
-  scrollContent: {
-    flexGrow: 1,
-    minHeight: '100%',
-  },
-  topSection: {
+  contentWrapper: {
     flex: 1,
-    minHeight: 300,
-  },
-  bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? 120 : 100,
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -425,132 +291,83 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
-  calendarContainer: {
-    marginBottom: 24,
-  },
-  calendarHeader: {
+  dateButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 8,
-  },
-  navButton: {
-    padding: 8,
-  },
-  headerTextContainer: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 16,
   },
-  headerText: {
-    fontSize: 18,
+  dateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  pickerContainer: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  pickerHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pickerHeaderText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
   },
-  daysOfWeekContainer: {
+  pickerRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    height: 200,
+    gap: 8,
+    marginBottom: 16,
   },
-  dayOfWeekCell: {
+  pickerColumn: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  pickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  dayOfWeekText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
+  pickerItemSelected: {
+    backgroundColor: '#1F2937',
   },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: '14.28%',
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 4,
-  },
-  dayText: {
+  pickerItemText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
-  },
-  monthsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    paddingVertical: 12,
-  },
-  monthCell: {
-    width: '30%',
-    paddingVertical: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  monthText: {
-    fontSize: 14,
-    fontWeight: '600',
     color: '#4B5563',
   },
-  yearsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    paddingVertical: 12,
-  },
-  yearCell: {
-    width: '30%',
-    paddingVertical: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  yearText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  selectedCell: {
-    backgroundColor: '#1F2937',
-    borderColor: '#1F2937',
-  },
-  selectedText: {
+  pickerItemTextSelected: {
     color: '#FFFFFF',
-  },
-  todayCell: {
-    borderColor: '#1F2937',
-    borderWidth: 2,
-  },
-  todayText: {
     fontWeight: '700',
   },
-  selectedDateContainer: {
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+  confirmButton: {
+    backgroundColor: '#4B5563',
+    borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
   },
-  selectedDateLabel: {
-    fontSize: 12,
+  confirmButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  selectedDateText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    textAlign: 'center',
   },
   errorContainer: {
     marginBottom: 24,

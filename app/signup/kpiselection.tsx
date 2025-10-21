@@ -100,14 +100,12 @@ export default function KPISelectionPage() {
             </View>
           </View>
 
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.topSection} />
-
-            <View style={styles.bottomSection}>
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.card}>
                 <View style={styles.titleSection}>
                   <Text style={styles.title}>What interests you?</Text>
@@ -204,8 +202,8 @@ export default function KPISelectionPage() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
@@ -251,19 +249,14 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    minHeight: '100%',
-  },
-  topSection: {
+  contentWrapper: {
     flex: 1,
-    minHeight: 300,
-  },
-  bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? 120 : 100,
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -274,6 +267,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 10,
+    minHeight: 600,
   },
   titleSection: {
     marginBottom: 24,
@@ -298,13 +292,13 @@ const styles = StyleSheet.create({
   kpiContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     marginBottom: 24,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
     backgroundColor: '#F3F4F6',
     borderWidth: 2,
     borderColor: '#E5E7EB',
@@ -314,7 +308,7 @@ const styles = StyleSheet.create({
     borderColor: '#1F2937',
   },
   chipText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     color: '#4B5563',
   },

@@ -122,14 +122,12 @@ export default function SignupPage() {
             </View>
           </View>
 
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.topSection} />
-
-            <View style={styles.bottomSection}>
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.card}>
                 <View style={styles.titleSection}>
                   <Text style={styles.title}>
@@ -207,8 +205,8 @@ export default function SignupPage() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
@@ -254,19 +252,15 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    minHeight: '100%',
-  },
-  topSection: {
+  contentWrapper: {
     flex: 1,
-    minHeight: 300,
-  },
-  bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
+    marginTop: Platform.OS === 'ios' ? 120 : 100,
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
