@@ -11,7 +11,9 @@ import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
+import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
+import { Modal } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -99,6 +101,9 @@ const AD_VARIANTS = [
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
+  const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
+  const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
+  const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
   const router = useRouter();
 
   useEffect(() => {
@@ -114,6 +119,44 @@ export default function HomePage() {
       return `${(count / 1000).toFixed(1)}K`;
     }
     return count.toString();
+  };
+
+  const handleLike = (videoId: string) => {
+    setLikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+        setDislikedVideos(prevDislikes => {
+          const newDislikes = new Set(prevDislikes);
+          newDislikes.delete(videoId);
+          return newDislikes;
+        });
+      }
+      return newSet;
+    });
+  };
+
+  const handleDislike = (videoId: string) => {
+    setDislikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+        setLikedVideos(prevLikes => {
+          const newLikes = new Set(prevLikes);
+          newLikes.delete(videoId);
+          return newLikes;
+        });
+      }
+      return newSet;
+    });
+  };
+
+  const handleSpiderChain = (videoId: string) => {
+    setExpandedVideoId(prev => prev === videoId ? null : videoId);
   };
 
   const renderAdSection = (index: number) => {
@@ -217,20 +260,48 @@ export default function HomePage() {
                     style={styles.thumbnailGradient}
                   />
                   <View style={styles.statsOverlay}>
-                    <View style={styles.statItem}>
-                      <ThumbsUp size={12} color="#FFFFFF" strokeWidth={2} />
+                    <TouchableOpacity
+                      style={[
+                        styles.statBlock,
+                        likedVideos.has(video.id) && styles.statBlockActive,
+                      ]}
+                      onPress={() => handleLike(video.id)}
+                      activeOpacity={0.7}
+                    >
+                      <ThumbsUp
+                        size={12}
+                        color="#FFFFFF"
+                        strokeWidth={2}
+                        fill={likedVideos.has(video.id) ? '#FFFFFF' : 'transparent'}
+                      />
                       <Text style={styles.statText}>{formatCount(video.likes)}</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                      <ThumbsDown size={12} color="#FFFFFF" strokeWidth={2} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.statBlock,
+                        dislikedVideos.has(video.id) && styles.statBlockActive,
+                      ]}
+                      onPress={() => handleDislike(video.id)}
+                      activeOpacity={0.7}
+                    >
+                      <ThumbsDown
+                        size={12}
+                        color="#FFFFFF"
+                        strokeWidth={2}
+                        fill={dislikedVideos.has(video.id) ? '#FFFFFF' : 'transparent'}
+                      />
                       <Text style={styles.statText}>{formatCount(video.dislikes)}</Text>
-                    </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.statBlock}
+                      onPress={() => handleSpiderChain(video.id)}
+                      activeOpacity={0.7}
+                    >
                       <GitBranch size={12} color="#FFFFFF" strokeWidth={2} />
                       <Text style={styles.statText}>{formatCount(video.spiderChains)}</Text>
-                    </View>
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
@@ -247,6 +318,15 @@ export default function HomePage() {
                   </View>
                 </View>
               </TouchableOpacity>
+
+              {expandedVideoId === video.id && (
+                <View style={styles.uploadContainer}>
+                  <UploadModal
+                    onClose={() => setExpandedVideoId(null)}
+                    parentVideoId={video.id}
+                  />
+                </View>
+              )}
 
               {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
@@ -394,34 +474,44 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     left: 12,
-    right: 12,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
     gap: 6,
   },
-  statItem: {
+  statBlock: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  statDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 4,
+  statBlockActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   statText: {
     fontSize: 10,
     fontWeight: '700',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  uploadContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    minHeight: 500,
   },
   durationBadge: {
     position: 'absolute',
