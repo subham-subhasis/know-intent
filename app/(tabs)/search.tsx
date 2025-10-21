@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { Search as SearchIcon, TrendingUp, X } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const TRENDING_SEARCHES = [
   'Machine Learning',
@@ -23,49 +24,50 @@ const TRENDING_SEARCHES = [
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.appName}>Search</Text>
-        <Text style={styles.tagline}>Discover new content</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
+        <Text style={[styles.appName, { color: colors.text }]}>Search</Text>
+        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Discover new content</Text>
       </View>
 
-      <View style={styles.searchSection}>
-        <View style={styles.searchBar}>
-          <SearchIcon size={20} color="#6B7280" strokeWidth={2} />
+      <View style={[styles.searchSection, { backgroundColor: colors.background }]}>
+        <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <SearchIcon size={20} color={colors.textSecondary} strokeWidth={2} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search videos, creators, topics..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-              <X size={20} color="#6B7280" strokeWidth={2} />
+              <X size={20} color={colors.textSecondary} strokeWidth={2} />
             </TouchableOpacity>
           ) : null}
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.content, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <TrendingUp size={20} color="#1F2937" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Trending Searches</Text>
+            <TrendingUp size={20} color={colors.text} strokeWidth={2} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Trending Searches</Text>
           </View>
 
           <View style={styles.trendingContainer}>
             {TRENDING_SEARCHES.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.trendingChip}
+                style={[styles.trendingChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 activeOpacity={0.7}
                 onPress={() => setSearchQuery(item)}
               >
-                <Text style={styles.trendingText}>{item}</Text>
+                <Text style={[styles.trendingText, { color: colors.textSecondary }]}>{item}</Text>
               </TouchableOpacity>
             ))}
           </View>

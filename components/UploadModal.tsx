@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { X, Upload, Image, Video, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface UploadModalProps {
   onClose: () => void;
@@ -35,6 +36,7 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   const [customKPI, setCustomKPI] = useState('');
   const [showCustomKPI, setShowCustomKPI] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+  const { colors, theme } = useTheme();
 
   const handleUpload = () => {
     console.log('Upload:', { description, selectedKPI, customKPI, mediaType });
@@ -42,13 +44,13 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
           {parentVideoId ? 'Create Spider Response' : 'Upload Content'}
         </Text>
         <TouchableOpacity onPress={onClose} style={styles.closeButton} activeOpacity={0.7}>
-          <X size={24} color="#1F2937" strokeWidth={2} />
+          <X size={24} color={colors.icon} strokeWidth={2} />
         </TouchableOpacity>
       </View>
 
@@ -58,25 +60,25 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Select Media Type</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Select Media Type</Text>
           <View style={styles.mediaTypeRow}>
             <TouchableOpacity
               style={[
                 styles.mediaTypeButton,
-                mediaType === 'image' && styles.mediaTypeButtonActive,
+                { borderColor: colors.border, backgroundColor: mediaType === 'image' ? colors.primary : colors.surface },
               ]}
               onPress={() => setMediaType('image')}
               activeOpacity={0.7}
             >
               <Image
                 size={24}
-                color={mediaType === 'image' ? '#FFFFFF' : '#6B7280'}
+                color={mediaType === 'image' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
                 strokeWidth={2}
               />
               <Text
                 style={[
                   styles.mediaTypeText,
-                  mediaType === 'image' && styles.mediaTypeTextActive,
+                  { color: mediaType === 'image' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
                 ]}
               >
                 Image
@@ -86,20 +88,20 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
             <TouchableOpacity
               style={[
                 styles.mediaTypeButton,
-                mediaType === 'video' && styles.mediaTypeButtonActive,
+                { borderColor: colors.border, backgroundColor: mediaType === 'video' ? colors.primary : colors.surface },
               ]}
               onPress={() => setMediaType('video')}
               activeOpacity={0.7}
             >
               <Video
                 size={24}
-                color={mediaType === 'video' ? '#FFFFFF' : '#6B7280'}
+                color={mediaType === 'video' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
                 strokeWidth={2}
               />
               <Text
                 style={[
                   styles.mediaTypeText,
-                  mediaType === 'video' && styles.mediaTypeTextActive,
+                  { color: mediaType === 'video' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
                 ]}
               >
                 Video
@@ -114,23 +116,23 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
               colors={['#F3F4F6', '#E5E7EB']}
               style={styles.uploadGradient}
             >
-              <Upload size={32} color="#6B7280" strokeWidth={2} />
-              <Text style={styles.uploadText}>
+              <Upload size={32} color={colors.textSecondary} strokeWidth={2} />
+              <Text style={[styles.uploadText, { color: colors.textSecondary }]}>
                 Tap to select {mediaType === 'image' ? 'an image' : 'a video'}
               </Text>
               {mediaType === 'video' && (
-                <Text style={styles.uploadHint}>Max duration: 5 minutes</Text>
+                <Text style={[styles.uploadHint, { color: colors.textTertiary }]}>Max duration: 5 minutes</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Description</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
           <TextInput
-            style={styles.textArea}
+            style={[styles.textArea, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
             placeholder="Describe your content..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={4}
             value={description}
@@ -140,14 +142,14 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Select KPI Category</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Select KPI Category</Text>
           <View style={styles.kpiGrid}>
             {AVAILABLE_KPIS.map((kpi) => (
               <TouchableOpacity
                 key={kpi}
                 style={[
                   styles.kpiChip,
-                  selectedKPI === kpi && styles.kpiChipActive,
+                  { borderColor: colors.border, backgroundColor: selectedKPI === kpi ? colors.primary : colors.surface },
                 ]}
                 onPress={() => {
                   setSelectedKPI(kpi);
@@ -158,7 +160,7 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
                 <Text
                   style={[
                     styles.kpiChipText,
-                    selectedKPI === kpi && styles.kpiChipTextActive,
+                    { color: selectedKPI === kpi ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
                   ]}
                 >
                   {kpi}
@@ -170,7 +172,7 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
               style={[
                 styles.kpiChip,
                 styles.kpiChipCustom,
-                showCustomKPI && styles.kpiChipActive,
+                { borderColor: colors.border, backgroundColor: showCustomKPI ? colors.primary : colors.surface },
               ]}
               onPress={() => {
                 setShowCustomKPI(true);
@@ -180,13 +182,13 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
             >
               <Plus
                 size={16}
-                color={showCustomKPI ? '#FFFFFF' : '#6B7280'}
+                color={showCustomKPI ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
                 strokeWidth={2}
               />
               <Text
                 style={[
                   styles.kpiChipText,
-                  showCustomKPI && styles.kpiChipTextActive,
+                  { color: showCustomKPI ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
                 ]}
               >
                 Custom
@@ -196,9 +198,9 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
 
           {showCustomKPI && (
             <TextInput
-              style={styles.customKPIInput}
+              style={[styles.customKPIInput, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
               placeholder="Enter custom KPI..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textTertiary}
               value={customKPI}
               onChangeText={setCustomKPI}
             />
@@ -206,13 +208,13 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: colors.borderLight, backgroundColor: colors.background }]}>
         <TouchableOpacity
-          style={styles.cancelButton}
+          style={[styles.cancelButton, { borderColor: colors.border }]}
           onPress={onClose}
           activeOpacity={0.7}
         >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancel</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -228,14 +230,16 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
           <LinearGradient
             colors={
               mediaType && description && (selectedKPI || customKPI)
-                ? ['#667eea', '#764ba2']
-                : ['#D1D5DB', '#9CA3AF']
+                ? colors.gradient
+                : theme === 'dark'
+                  ? ['#2A2A2A', '#1A1A1A']
+                  : ['#D1D5DB', '#9CA3AF']
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.uploadButtonGradient}
           >
-            <Text style={styles.uploadButtonText}>Upload</Text>
+            <Text style={[styles.uploadButtonText, { color: (mediaType && description && (selectedKPI || customKPI)) ? '#FFFFFF' : colors.buttonDisabledText }]}>Upload</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>

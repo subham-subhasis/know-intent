@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThumbsUp, ThumbsDown, GitBranch, Eye } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -102,6 +103,8 @@ const USER_VIDEOS = [
 ];
 
 export default function ProfilePage() {
+  const { colors, theme } = useTheme();
+
   const formatCount = (count: number) => {
     if (count >= 1000) {
       return `${(count / 1000).toFixed(1)}K`;
@@ -170,7 +173,7 @@ export default function ProfilePage() {
                   response.position,
                 ]}
               >
-                <View style={styles.connectionLine} />
+                <View style={[styles.connectionLine, { backgroundColor: colors.border }]} />
                 {renderSpiderNode(response, depth + 1, idx)}
               </View>
             ))}
@@ -181,41 +184,41 @@ export default function ProfilePage() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.appName}>My Profile</Text>
-        <Text style={styles.tagline}>Your content and spider chains</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
+        <Text style={[styles.appName, { color: colors.text }]}>My Profile</Text>
+        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your content and spider chains</Text>
       </View>
 
       <ScrollView
-        style={styles.content}
+        style={[styles.content, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.profileInfo}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>U</Text>
+        <View style={[styles.profileInfo, { borderBottomColor: colors.borderLight }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
           </View>
-          <Text style={styles.userName}>User Name</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{USER_VIDEOS.length}</Text>
-              <Text style={styles.statLabel}>Videos</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>{USER_VIDEOS.length}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Videos</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>937K</Text>
-              <Text style={styles.statLabel}>Total Views</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>937K</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Views</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>1.6K</Text>
-              <Text style={styles.statLabel}>Spider Chains</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>1.6K</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Spider Chains</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.spiderSection}>
-          <Text style={styles.sectionTitle}>Your Spider Chains</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Spider Chains</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
             Your videos and the trending responses they've inspired
           </Text>
 
