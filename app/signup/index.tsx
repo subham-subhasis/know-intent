@@ -13,13 +13,16 @@ import {
   Animated,
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { X } from 'lucide-react-native';
+import { X, ChevronDown } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import countryCodes from '@/assets/json/country-codes.json';
 
 export default function SignupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [showEmailInput, setShowEmailInput] = useState(true);
+  const [countryCode, setCountryCode] = useState('+91');
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const spinValue = useRef(new Animated.Value(0)).current;
@@ -141,29 +144,90 @@ export default function SignupPage() {
                 </View>
 
                 <View style={styles.inputSection}>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder={showEmailInput ? 'email@example.com' : '+1 234 567 8900'}
-                      placeholderTextColor="#9CA3AF"
-                      value={showEmailInput ? emailAddress : phoneNumber}
-                      onChangeText={showEmailInput ? setEmailAddress : setPhoneNumber}
-                      keyboardType={showEmailInput ? 'email-address' : 'phone-pad'}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                    {(showEmailInput ? emailAddress : phoneNumber) ? (
+                  {showEmailInput ? (
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="email@example.com"
+                        placeholderTextColor="#9CA3AF"
+                        value={emailAddress}
+                        onChangeText={setEmailAddress}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {emailAddress ? (
+                        <TouchableOpacity
+                          style={styles.clearButton}
+                          onPress={handleClear}
+                          activeOpacity={0.7}
+                        >
+                          <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                            <X size={20} color="#6B7280" strokeWidth={2.5} />
+                          </Animated.View>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                  ) : (
+                    <View style={styles.phoneInputContainer}>
                       <TouchableOpacity
-                        style={styles.clearButton}
-                        onPress={handleClear}
+                        style={styles.countryCodeButton}
+                        onPress={() => setShowCountryPicker(!showCountryPicker)}
                         activeOpacity={0.7}
                       >
-                        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-                          <X size={20} color="#6B7280" strokeWidth={2.5} />
-                        </Animated.View>
+                        <Text style={styles.countryCodeText}>{countryCode}</Text>
+                        <ChevronDown size={16} color="#6B7280" strokeWidth={2} />
                       </TouchableOpacity>
-                    ) : null}
-                  </View>
+
+                      <View style={styles.phoneInputWrapper}>
+                        <TextInput
+                          style={styles.phoneInput}
+                          placeholder="1234567890"
+                          placeholderTextColor="#9CA3AF"
+                          value={phoneNumber}
+                          onChangeText={setPhoneNumber}
+                          keyboardType="phone-pad"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                        />
+                        {phoneNumber ? (
+                          <TouchableOpacity
+                            style={styles.clearButton}
+                            onPress={handleClear}
+                            activeOpacity={0.7}
+                          >
+                            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+                              <X size={20} color="#6B7280" strokeWidth={2.5} />
+                            </Animated.View>
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    </View>
+                  )}
+
+                  {showCountryPicker && !showEmailInput && (
+                    <ScrollView style={styles.countryPickerContainer} nestedScrollEnabled>
+                      {countryCodes.map((item) => (
+                        <TouchableOpacity
+                          key={item.code + item.country}
+                          style={[
+                            styles.countryItem,
+                            countryCode === item.code && styles.countryItemSelected
+                          ]}
+                          onPress={() => {
+                            setCountryCode(item.code);
+                            setShowCountryPicker(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.countryFlag}>{item.flag}</Text>
+                          <Text style={styles.countryName}>{item.country}</Text>
+                          <Text style={styles.countryCode}>{item.code}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  )}
+
                   {error ? <Text style={styles.errorText}>{error}</Text> : null}
                 </View>
 
@@ -305,6 +369,76 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
+  },
+  phoneInputContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  countryCodeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  countryCodeText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  phoneInputWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+  phoneInput: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#1F2937',
+    textAlign: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 44,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  countryPickerContainer: {
+    maxHeight: 250,
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  countryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  countryItemSelected: {
+    backgroundColor: '#F3F4F6',
+  },
+  countryFlag: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  countryName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F2937',
+  },
+  countryCode: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
   },
   clearButton: {
     position: 'absolute',

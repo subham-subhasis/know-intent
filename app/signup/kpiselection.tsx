@@ -50,6 +50,7 @@ export default function KPISelectionPage() {
 
   const handleNext = () => {
     if (validateSelection()) {
+      router.replace('/(tabs)');
     }
   };
 
