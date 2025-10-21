@@ -1,312 +1,347 @@
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
   ImageBackground,
-  Animated,
 } from 'react-native';
-import { useState, useRef } from 'react';
-import { X } from 'lucide-react-native';
+import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 export default function DateOfBirthPage() {
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [viewMode, setViewMode] = useState<'day' | 'month' | 'year'>('day');
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [error, setError] = useState('');
   const router = useRouter();
-  const spinValueDay = useRef(new Animated.Value(0)).current;
-  const spinValueMonth = useRef(new Animated.Value(0)).current;
-  const spinValueYear = useRef(new Animated.Value(0)).current;
 
-  const validateDate = (): boolean => {
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const handleDateSelect = (day: number) => {
+    const newDate = new Date(currentYear, currentMonth, day);
+    setSelectedDate(newDate);
     setError('');
+  };
 
-    if (!day.trim() || !month.trim() || !year.trim()) {
-      setError('Please enter your complete date of birth');
-      return false;
+  const handleMonthSelect = (monthIndex: number) => {
+    setCurrentMonth(monthIndex);
+    setViewMode('day');
+  };
+
+  const handleYearSelect = (year: number) => {
+    setCurrentYear(year);
+    setViewMode('month');
+  };
+
+  const handlePrevious = () => {
+    if (viewMode === 'day') {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    } else if (viewMode === 'year') {
+      setCurrentYear(currentYear - 12);
     }
-
-    const dayNum = parseInt(day);
-    const monthNum = parseInt(month);
-    const yearNum = parseInt(year);
-
-    if (isNaN(dayNum) || isNaN(monthNum) || isNaN(yearNum)) {
-      setError('Please enter valid numbers');
-      return false;
-    }
-
-    if (dayNum < 1 || dayNum > 31) {
-      setError('Day must be between 1 and 31');
-      return false;
-    }
-
-    if (monthNum < 1 || monthNum > 12) {
-      setError('Month must be between 1 and 12');
-      return false;
-    }
-
-    const currentYear = new Date().getFullYear();
-    if (yearNum < 1900 || yearNum > currentYear) {
-      setError(`Year must be between 1900 and ${currentYear}`);
-      return false;
-    }
-
-    const age = currentYear - yearNum;
-    if (age < 13) {
-      setError('You must be at least 13 years old');
-      return false;
-    }
-
-    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
-    if (dayNum > daysInMonth) {
-      setError(`Invalid day for the selected month`);
-      return false;
-    }
-
-    return true;
   };
 
   const handleNext = () => {
-    if (validateDate()) {
-      router.push('/signup/kpiselection');
+    if (viewMode === 'day') {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    } else if (viewMode === 'year') {
+      setCurrentYear(currentYear + 12);
     }
+  };
+
+  const validateAndProceed = () => {
+    setError('');
+
+    const age = today.getFullYear() - selectedDate.getFullYear();
+    const monthDiff = today.getMonth() - selectedDate.getMonth();
+    const dayDiff = today.getDate() - selectedDate.getDate();
+
+    let actualAge = age;
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      actualAge--;
+    }
+
+    if (actualAge < 13) {
+      setError('You must be at least 13 years old');
+      return;
+    }
+
+    if (selectedDate > today) {
+      setError('Date cannot be in the future');
+      return;
+    }
+
+    router.push('/signup/kpiselection');
   };
 
   const handleBackToLogin = () => {
     router.push('/');
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+  const renderDayView = () => {
+    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+    const days = [];
 
-  const handleDayChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length <= 2) {
-      setDay(cleaned);
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<View key={`empty-${i}`} style={styles.dayCell} />);
     }
-  };
 
-  const handleMonthChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length <= 2) {
-      setMonth(cleaned);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isSelected =
+        selectedDate.getDate() === day &&
+        selectedDate.getMonth() === currentMonth &&
+        selectedDate.getFullYear() === currentYear;
+
+      const isToday =
+        today.getDate() === day &&
+        today.getMonth() === currentMonth &&
+        today.getFullYear() === currentYear;
+
+      days.push(
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.dayCell,
+            isSelected && styles.selectedCell,
+            isToday && !isSelected && styles.todayCell
+          ]}
+          onPress={() => handleDateSelect(day)}
+          activeOpacity={0.7}
+        >
+          <Text style={[
+            styles.dayText,
+            isSelected && styles.selectedText,
+            isToday && !isSelected && styles.todayText
+          ]}>
+            {day}
+          </Text>
+        </TouchableOpacity>
+      );
     }
+
+    return (
+      <View>
+        <View style={styles.daysOfWeekContainer}>
+          {DAYS_OF_WEEK.map(day => (
+            <View key={day} style={styles.dayOfWeekCell}>
+              <Text style={styles.dayOfWeekText}>{day}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={styles.daysGrid}>{days}</View>
+      </View>
+    );
   };
 
-  const handleYearChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length <= 4) {
-      setYear(cleaned);
+  const renderMonthView = () => {
+    return (
+      <View style={styles.monthsGrid}>
+        {MONTHS.map((month, index) => {
+          const isSelected =
+            currentMonth === index &&
+            selectedDate.getFullYear() === currentYear;
+
+          return (
+            <TouchableOpacity
+              key={month}
+              style={[styles.monthCell, isSelected && styles.selectedCell]}
+              onPress={() => handleMonthSelect(index)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.monthText, isSelected && styles.selectedText]}>
+                {month.substring(0, 3)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const renderYearView = () => {
+    const startYear = Math.floor(currentYear / 12) * 12;
+    const years = [];
+
+    for (let i = 0; i < 12; i++) {
+      const year = startYear + i;
+      const isSelected = selectedDate.getFullYear() === year;
+
+      years.push(
+        <TouchableOpacity
+          key={year}
+          style={[styles.yearCell, isSelected && styles.selectedCell]}
+          onPress={() => handleYearSelect(year)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.yearText, isSelected && styles.selectedText]}>
+            {year}
+          </Text>
+        </TouchableOpacity>
+      );
     }
+
+    return <View style={styles.yearsGrid}>{years}</View>;
   };
-
-  const handleClearDay = () => {
-    spinValueDay.setValue(0);
-    Animated.timing(spinValueDay, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      spinValueDay.setValue(0);
-    });
-    setDay('');
-    setError('');
-  };
-
-  const handleClearMonth = () => {
-    spinValueMonth.setValue(0);
-    Animated.timing(spinValueMonth, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      spinValueMonth.setValue(0);
-    });
-    setMonth('');
-    setError('');
-  };
-
-  const handleClearYear = () => {
-    spinValueYear.setValue(0);
-    Animated.timing(spinValueYear, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      spinValueYear.setValue(0);
-    });
-    setYear('');
-    setError('');
-  };
-
-  const spinDay = spinValueDay.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const spinMonth = spinValueMonth.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const spinYear = spinValueYear.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
-        <ImageBackground
-          source={require('@/assets/images/intent-bg.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-        />
+    <View style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/images/intent-bg.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
 
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.appName}>Intent</Text>
-              <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.appName}>Intent</Text>
+          <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.topSection} />
+
+        <View style={styles.bottomSection}>
+          <View style={styles.card}>
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>What's your date of birth?</Text>
+              <Text style={styles.infoText}>
+                Use your own date of birth even if it's for business or intended user is someone else.{' '}
+                <Text style={styles.boldText}>
+                  While creating a profile under it, we will ask the same question again to show relevant suggestions after successful login.
+                </Text>
+              </Text>
             </View>
-          </View>
 
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.topSection} />
-
-            <View style={styles.bottomSection}>
-              <View style={styles.card}>
-                <View style={styles.titleSection}>
-                  <Text style={styles.title}>What's your date of birth?</Text>
-                  <Text style={styles.infoText}>
-                    Use your own date of birth even if it's for business or intended user is someone else.{' '}
-                    <Text style={styles.boldText}>
-                      While creating a profile under it, we will ask the same question again to show relevant suggestions after successful login.
-                    </Text>
-                  </Text>
-                </View>
-
-                <View style={styles.dateInputContainer}>
-                  <View style={styles.dateInputWrapper}>
-                    <TextInput
-                      style={styles.dateInput}
-                      placeholder="DD"
-                      placeholderTextColor="#9CA3AF"
-                      value={day}
-                      onChangeText={handleDayChange}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                    {day ? (
-                      <TouchableOpacity
-                        style={styles.dateClearButton}
-                        onPress={handleClearDay}
-                        activeOpacity={0.7}
-                      >
-                        <Animated.View style={{ transform: [{ rotate: spinDay }] }}>
-                          <X size={16} color="#6B7280" strokeWidth={2.5} />
-                        </Animated.View>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <Text style={styles.dateSeparator}>/</Text>
-                  <View style={styles.dateInputWrapper}>
-                    <TextInput
-                      style={styles.dateInput}
-                      placeholder="MM"
-                      placeholderTextColor="#9CA3AF"
-                      value={month}
-                      onChangeText={handleMonthChange}
-                      keyboardType="number-pad"
-                      maxLength={2}
-                    />
-                    {month ? (
-                      <TouchableOpacity
-                        style={styles.dateClearButton}
-                        onPress={handleClearMonth}
-                        activeOpacity={0.7}
-                      >
-                        <Animated.View style={{ transform: [{ rotate: spinMonth }] }}>
-                          <X size={16} color="#6B7280" strokeWidth={2.5} />
-                        </Animated.View>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <Text style={styles.dateSeparator}>/</Text>
-                  <View style={[styles.dateInputWrapper, styles.yearInputWrapper]}>
-                    <TextInput
-                      style={styles.dateInput}
-                      placeholder="YYYY"
-                      placeholderTextColor="#9CA3AF"
-                      value={year}
-                      onChangeText={handleYearChange}
-                      keyboardType="number-pad"
-                      maxLength={4}
-                    />
-                    {year ? (
-                      <TouchableOpacity
-                        style={styles.dateClearButton}
-                        onPress={handleClearYear}
-                        activeOpacity={0.7}
-                      >
-                        <Animated.View style={{ transform: [{ rotate: spinYear }] }}>
-                          <X size={16} color="#6B7280" strokeWidth={2.5} />
-                        </Animated.View>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                </View>
-
-                {error ? (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                  </View>
-                ) : null}
-
+            <View style={styles.calendarContainer}>
+              <View style={styles.calendarHeader}>
                 <TouchableOpacity
-                  style={[
-                    styles.button,
-                    (!day || !month || !year) && styles.buttonDisabled
-                  ]}
-                  disabled={!day || !month || !year}
-                  onPress={handleNext}
-                  activeOpacity={0.8}
+                  style={styles.navButton}
+                  onPress={handlePrevious}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.buttonText}>Next</Text>
+                  <ChevronLeft size={24} color="#1F2937" strokeWidth={2} />
                 </TouchableOpacity>
 
+                <View style={styles.headerTextContainer}>
+                  {viewMode === 'day' && (
+                    <>
+                      <TouchableOpacity
+                        onPress={() => setViewMode('month')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.headerText}>
+                          {MONTHS[currentMonth]}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setViewMode('year')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.headerText}>{currentYear}</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                  {viewMode === 'month' && (
+                    <TouchableOpacity
+                      onPress={() => setViewMode('year')}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.headerText}>{currentYear}</Text>
+                    </TouchableOpacity>
+                  )}
+                  {viewMode === 'year' && (
+                    <Text style={styles.headerText}>
+                      {Math.floor(currentYear / 12) * 12} - {Math.floor(currentYear / 12) * 12 + 11}
+                    </Text>
+                  )}
+                </View>
+
                 <TouchableOpacity
-                  style={styles.loginLinkContainer}
-                  onPress={handleBackToLogin}
+                  style={styles.navButton}
+                  onPress={handleNext}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.loginLinkText}>
-                    Already have an account?{' '}
-                    <Text style={styles.loginLink}>Login Directly</Text>
-                  </Text>
+                  <ChevronRight size={24} color="#1F2937" strokeWidth={2} />
                 </TouchableOpacity>
               </View>
+
+              {viewMode === 'day' && renderDayView()}
+              {viewMode === 'month' && renderMonthView()}
+              {viewMode === 'year' && renderYearView()}
+
+              <View style={styles.selectedDateContainer}>
+                <Text style={styles.selectedDateLabel}>Selected Date:</Text>
+                <Text style={styles.selectedDateText}>
+                  {selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </Text>
+              </View>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    </TouchableWithoutFeedback>
+
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={validateAndProceed}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.loginLinkContainer}
+              onPress={handleBackToLogin}
+            >
+              <Text style={styles.loginLinkText}>
+                Already have an account?{' '}
+                <Text style={styles.loginLink}>Login Directly</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -346,9 +381,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: 2,
   },
-  keyboardView: {
-    flex: 1,
-  },
   scrollContent: {
     flexGrow: 1,
     minHeight: '100%',
@@ -374,7 +406,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   titleSection: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   title: {
     fontSize: 24,
@@ -393,45 +425,132 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
   },
-  dateInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  calendarContainer: {
     marginBottom: 24,
   },
-  dateInputWrapper: {
-    flex: 1,
-    maxWidth: 80,
-    position: 'relative',
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 8,
   },
-  yearInputWrapper: {
-    maxWidth: 120,
+  navButton: {
+    padding: 8,
   },
-  dateInput: {
+  headerTextContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  headerText: {
     fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  daysOfWeekContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  dayOfWeekCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dayOfWeekText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 4,
+  },
+  dayText: {
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
-    textAlign: 'center',
+  },
+  monthsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  monthCell: {
+    width: '30%',
     paddingVertical: 16,
-    paddingHorizontal: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
     borderWidth: 2,
     borderColor: '#E5E7EB',
+  },
+  monthText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
+  },
+  yearsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  yearCell: {
+    width: '30%',
+    paddingVertical: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F3F4F6',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
   },
-  dateClearButton: {
-    position: 'absolute',
-    right: 4,
-    top: '50%',
-    transform: [{ translateY: -8 }],
-    padding: 2,
-    zIndex: 1,
+  yearText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
   },
-  dateSeparator: {
-    fontSize: 24,
+  selectedCell: {
+    backgroundColor: '#1F2937',
+    borderColor: '#1F2937',
+  },
+  selectedText: {
+    color: '#FFFFFF',
+  },
+  todayCell: {
+    borderColor: '#1F2937',
+    borderWidth: 2,
+  },
+  todayText: {
     fontWeight: '700',
-    color: '#9CA3AF',
-    marginHorizontal: 8,
+  },
+  selectedDateContainer: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  selectedDateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  selectedDateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
   },
   errorContainer: {
     marginBottom: 24,
@@ -447,9 +566,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 16,
-  },
-  buttonDisabled: {
-    backgroundColor: '#D1D5DB',
   },
   buttonText: {
     color: '#FFFFFF',
