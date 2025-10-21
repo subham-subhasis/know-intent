@@ -7,9 +7,12 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Bell, MessageCircle, Sparkles, ExternalLink } from 'lucide-react-native';
+import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const STORY_DATA = [
   { id: '1', name: 'Your Story', gradient: ['#667eea', '#764ba2'] },
@@ -60,12 +63,88 @@ const VIDEO_CARDS = [
   },
 ];
 
+const AD_VARIANTS = [
+  {
+    gradient: ['#FF6B6B', '#FFE66D', '#4ECDC4'],
+    brand: 'TechPro',
+    tagline: 'Innovation meets excellence',
+  },
+  {
+    gradient: ['#667eea', '#764ba2', '#f093fb'],
+    brand: 'LifeStyle+',
+    tagline: 'Elevate your everyday',
+  },
+  {
+    gradient: ['#43e97b', '#38f9d7', '#667eea'],
+    brand: 'FutureNow',
+    tagline: 'Tomorrow starts today',
+  },
+];
+
 export default function HomePage() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const renderAdSection = (index: number) => {
+    const adData = AD_VARIANTS[index % AD_VARIANTS.length];
+    return (
+      <TouchableOpacity
+        key={`ad-${index}`}
+        style={styles.adSection}
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={adData.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.adGradient}
+        >
+          <View style={styles.adSparkles}>
+            <Sparkles size={16} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
+            <Sparkles size={12} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
+          </View>
+          <View style={styles.adContent}>
+            <View style={styles.adTextContainer}>
+              <Text style={styles.adBrand}>{adData.brand}</Text>
+              <Text style={styles.adTagline}>{adData.tagline}</Text>
+            </View>
+            <View style={styles.adIconContainer}>
+              <ExternalLink size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+          </View>
+          <View style={styles.adSparklesRight}>
+            <Sparkles size={14} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
+            <Sparkles size={10} color="#FFFFFF" strokeWidth={2.5} fill="#FFFFFF" />
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.appName}>Intent</Text>
-        <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.appName}>Intent</Text>
+          <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+            <Bell size={24} color="#1F2937" strokeWidth={2} />
+            <View style={styles.notificationDot} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+            <MessageCircle size={24} color="#1F2937" strokeWidth={2} />
+            <View style={styles.chatDot} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -89,31 +168,43 @@ export default function HomePage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.feedContent}
       >
-        {VIDEO_CARDS.map((video) => (
-          <TouchableOpacity key={video.id} style={styles.videoCard} activeOpacity={0.8}>
-            <View style={styles.videoThumbnail}>
-              <LinearGradient
-                colors={['#667eea', '#764ba2']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.thumbnailGradient}
-              />
-              <View style={styles.durationBadge}>
-                <Text style={styles.durationText}>{video.duration}</Text>
-              </View>
-            </View>
+        {loading ? (
+          <>
+            <ShimmerCard />
+            <ShimmerCard />
+            <ShimmerCard />
+          </>
+        ) : (
+          VIDEO_CARDS.map((video, index) => (
+            <View key={video.id}>
+              <TouchableOpacity style={styles.videoCard} activeOpacity={0.8}>
+                <View style={styles.videoThumbnail}>
+                  <LinearGradient
+                    colors={['#667eea', '#764ba2']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.thumbnailGradient}
+                  />
+                  <View style={styles.durationBadge}>
+                    <Text style={styles.durationText}>{video.duration}</Text>
+                  </View>
+                </View>
 
-            <View style={styles.videoInfo}>
-              <Text style={styles.videoTitle} numberOfLines={2}>
-                {video.title}
-              </Text>
-              <View style={styles.videoMeta}>
-                <Text style={styles.creatorName}>{video.creator}</Text>
-                <Text style={styles.viewsText}>{video.views} views</Text>
-              </View>
+                <View style={styles.videoInfo}>
+                  <Text style={styles.videoTitle} numberOfLines={2}>
+                    {video.title}
+                  </Text>
+                  <View style={styles.videoMeta}>
+                    <Text style={styles.creatorName}>{video.creator}</Text>
+                    <Text style={styles.viewsText}>{video.views} views</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
-          </TouchableOpacity>
-        ))}
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -125,12 +216,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 16,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    position: 'relative',
+    padding: 6,
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  chatDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   appName: {
     fontSize: 28,
@@ -149,10 +276,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    maxHeight: 100,
   },
   storiesContent: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
     gap: 16,
   },
   storyContainer: {
@@ -160,9 +288,9 @@ const styles = StyleSheet.create({
     width: 70,
   },
   storyCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     marginBottom: 6,
     borderWidth: 3,
     borderColor: '#FFFFFF',
@@ -187,7 +315,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 110 : 90,
   },
   videoCard: {
-    marginBottom: 24,
+    marginBottom: 16,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
@@ -244,5 +372,74 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     color: '#9CA3AF',
+  },
+  adSection: {
+    height: 80,
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  adGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    position: 'relative',
+  },
+  adSparkles: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    gap: 6,
+  },
+  adSparklesRight: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    flexDirection: 'row',
+    gap: 6,
+  },
+  adContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  adTextContainer: {
+    flex: 1,
+  },
+  adBrand: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  adTagline: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 2,
+    opacity: 0.95,
+    letterSpacing: 0.5,
+  },
+  adIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
 });
