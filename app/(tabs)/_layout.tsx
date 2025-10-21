@@ -1,16 +1,23 @@
 import { Tabs } from 'expo-router';
 import { View, StyleSheet, Platform } from 'react-native';
 import { Home, Search, User } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
+  const { colors, theme } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+          ...styles.tabBar,
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
+        },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#1F2937',
-        tabBarInactiveTintColor: '#9CA3AF',
+        tabBarActiveTintColor: colors.icon,
+        tabBarInactiveTintColor: colors.iconInactive,
       }}>
       <Tabs.Screen
         name="index"
@@ -24,8 +31,11 @@ export default function TabLayout() {
         name="search"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.searchButton, focused && styles.searchButtonActive]}>
-              <Search size={28} color={focused ? '#FFFFFF' : color} strokeWidth={2.5} />
+            <View style={[
+              styles.searchButton,
+              { backgroundColor: focused ? colors.primary : colors.surface, borderColor: colors.tabBar }
+            ]}>
+              <Search size={28} color={focused ? (theme === 'dark' ? colors.background : '#FFFFFF') : color} strokeWidth={2.5} />
             </View>
           ),
         }}

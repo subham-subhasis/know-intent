@@ -5,9 +5,11 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  Switch,
 } from 'react-native';
-import { Settings, Bell, Bookmark, Heart, Clock, ChevronLeft } from 'lucide-react-native';
+import { Settings, Bell, Bookmark, Heart, Clock, ChevronLeft, Moon, Sun } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const MENU_ITEMS = [
   { id: '1', icon: Bookmark, label: 'Saved Videos', count: '12' },
@@ -19,20 +21,21 @@ const MENU_ITEMS = [
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { theme, colors, toggleTheme } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
-          <ChevronLeft size={28} color="#1F2937" strokeWidth={2} />
+          <ChevronLeft size={28} color={colors.icon} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.appName}>Account</Text>
-          <Text style={styles.tagline}>Manage your account</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>Account</Text>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>Manage your account</Text>
         </View>
       </View>
 
@@ -41,30 +44,49 @@ export default function SettingsPage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={styles.profileSection}>
+        <View style={[styles.profileSection, { borderBottomColor: colors.borderLight }]}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>U</Text>
+            <View style={[styles.avatar, { backgroundColor: colors.primary, borderColor: colors.background }]}>
+              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
             </View>
           </View>
-          <Text style={styles.userName}>User Name</Text>
-          <Text style={styles.userEmail}>user@example.com</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>user@example.com</Text>
         </View>
 
         <View style={styles.menuSection}>
+          <View style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                {theme === 'dark' ? (
+                  <Moon size={22} color={colors.icon} strokeWidth={2} />
+                ) : (
+                  <Sun size={22} color={colors.icon} strokeWidth={2} />
+                )}
+              </View>
+              <Text style={[styles.menuItemLabel, { color: colors.text }]}>Dark Theme</Text>
+            </View>
+            <Switch
+              value={theme === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.background}
+            />
+          </View>
+
           {MENU_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
-              <TouchableOpacity key={item.id} style={styles.menuItem} activeOpacity={0.7}>
+              <TouchableOpacity key={item.id} style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]} activeOpacity={0.7}>
                 <View style={styles.menuItemLeft}>
-                  <View style={styles.iconContainer}>
-                    <Icon size={22} color="#1F2937" strokeWidth={2} />
+                  <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                    <Icon size={22} color={colors.icon} strokeWidth={2} />
                   </View>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Text style={[styles.menuItemLabel, { color: colors.text }]}>{item.label}</Text>
                 </View>
                 {item.count && (
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countText}>{item.count}</Text>
+                  <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.countText, { color: theme === 'dark' ? colors.background : colors.background }]}>{item.count}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -72,7 +94,7 @@ export default function SettingsPage() {
           })}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#FEE2E2', borderColor: theme === 'dark' ? '#991b1b' : '#FECACA' }]} activeOpacity={0.8}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>

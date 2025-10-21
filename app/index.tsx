@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LandingPage() {
   const [identifier, setIdentifier] = useState('');

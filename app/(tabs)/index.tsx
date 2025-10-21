@@ -15,6 +15,7 @@ import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
 import { Modal } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -106,6 +107,7 @@ export default function HomePage() {
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
   const router = useRouter();
+  const { colors, theme } = useTheme();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -205,33 +207,33 @@ export default function HomePage() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.appName}>Intent</Text>
-          <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>Intent</Text>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>Scroll. Learn. Inspire.</Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Bell size={24} color="#1F2937" strokeWidth={2} />
+            <Bell size={24} color={colors.icon} strokeWidth={2} />
             <View style={styles.notificationDot} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <MessageCircle size={24} color="#1F2937" strokeWidth={2} />
+            <MessageCircle size={24} color={colors.icon} strokeWidth={2} />
             <View style={styles.chatDot} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.profileButton}
+            style={[styles.profileButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
             onPress={() => router.push('/settings')}
           >
-            <User size={20} color="#FFFFFF" strokeWidth={2.5} />
+            <User size={20} color={theme === 'dark' ? colors.background : colors.background} strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView
-        style={styles.storiesSection}
+        style={[styles.storiesSection, { backgroundColor: colors.background }]}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.storiesContent}
@@ -239,7 +241,7 @@ export default function HomePage() {
         {STORY_DATA.map((story) => (
           <TouchableOpacity key={story.id} style={styles.storyContainer} activeOpacity={0.7}>
             <LinearGradient colors={story.gradient} style={styles.storyCircle} />
-            <Text style={styles.storyName} numberOfLines={1}>
+            <Text style={[styles.storyName, { color: colors.text }]} numberOfLines={1}>
               {story.name}
             </Text>
           </TouchableOpacity>
@@ -247,7 +249,7 @@ export default function HomePage() {
       </ScrollView>
 
       <ScrollView
-        style={styles.feedSection}
+        style={[styles.feedSection, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.feedContent}
       >
@@ -318,12 +320,12 @@ export default function HomePage() {
                 </View>
 
                 <View style={styles.videoInfo}>
-                  <Text style={styles.videoTitle} numberOfLines={2}>
+                  <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={2}>
                     {video.title}
                   </Text>
                   <View style={styles.videoMeta}>
-                    <Text style={styles.creatorName}>{video.creator}</Text>
-                    <Text style={styles.viewsText}>{video.views} views</Text>
+                    <Text style={[styles.creatorName, { color: colors.textSecondary }]}>{video.creator}</Text>
+                    <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
                   </View>
                 </View>
               </TouchableOpacity>
