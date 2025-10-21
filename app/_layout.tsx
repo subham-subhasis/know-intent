@@ -11,7 +11,14 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="signup" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            gestureEnabled: false,
+            animation: 'none',
+          }}
+        />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" />

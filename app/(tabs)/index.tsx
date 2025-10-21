@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  BackHandler,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -112,6 +113,14 @@ export default function HomePage() {
     }, 2000);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      return true;
+    });
+
+    return () => backHandler.remove();
   }, []);
 
   const formatCount = (count: number) => {

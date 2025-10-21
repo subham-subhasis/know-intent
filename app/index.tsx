@@ -95,6 +95,7 @@ export default function LandingPage() {
                     (!identifier || !agreedToTerms) && styles.buttonDisabled
                   ]}
                   disabled={!identifier || !agreedToTerms}
+                  onPress={() => router.replace('/(tabs)')}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.buttonText}>Login To Intent</Text>
