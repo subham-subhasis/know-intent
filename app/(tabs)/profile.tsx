@@ -8,6 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import { Grid3x3, Network, Plus } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import GridView from '@/components/GridView';
@@ -163,6 +164,7 @@ const DUMMY_POSTS: Post[] = [
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { colors, theme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [posts, setPosts] = useState<Post[]>(DUMMY_POSTS);
@@ -184,11 +186,11 @@ export default function ProfilePage() {
   };
 
   const handlePostPress = (postId: string) => {
-    console.log('Post pressed:', postId);
+    router.push(`/post/${postId}`);
   };
 
   const handleViewAllChains = (postId: string) => {
-    console.log('View all chains for post:', postId);
+    router.push(`/post/${postId}`);
   };
 
   const formatCount = (count: number) => {

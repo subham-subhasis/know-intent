@@ -61,15 +61,15 @@ export default function GridView({ posts, onPostPress, onEndReached, isLoading }
       <View style={[styles.statsOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
         <View style={styles.statRow}>
           <View style={styles.statItem}>
-            <ThumbsUp size={12} color="#FFFFFF" strokeWidth={2} />
+            <ThumbsUp size={6} color="#FFFFFF" strokeWidth={2} />
             <Text style={styles.statText}>{formatCount(item.likes_count)}</Text>
           </View>
           <View style={styles.statItem}>
-            <ThumbsDown size={12} color="#FFFFFF" strokeWidth={2} />
+            <ThumbsDown size={6} color="#FFFFFF" strokeWidth={2} />
             <Text style={styles.statText}>{formatCount(item.dislikes_count)}</Text>
           </View>
           <View style={styles.statItem}>
-            <GitBranch size={12} color="#FFFFFF" strokeWidth={2} />
+            <GitBranch size={6} color="#FFFFFF" strokeWidth={2} />
             <Text style={styles.statText}>{formatCount(item.spider_chains_count)}</Text>
           </View>
         </View>
@@ -132,10 +132,10 @@ const styles = StyleSheet.create({
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 2,
   },
   statText: {
-    fontSize: 10,
+    fontSize: 5,
     fontWeight: '600',
     color: '#FFFFFF',
   },
