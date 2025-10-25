@@ -50,8 +50,8 @@ export default function SettingsPage() {
               <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
             </View>
           </View>
-          <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
-          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>user@example.com</Text>
+          <Text style={[styles.userName, { color: colors.text }]}>Subham</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>Intent_admin@gmail.com</Text>
         </View>
 
         <View style={styles.menuSection}>
