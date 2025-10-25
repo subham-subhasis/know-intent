@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ThumbsUp, ThumbsDown, X, ChevronDown } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, X, ArrowUp } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import MediaCarousel from '@/components/MediaCarousel';
 
@@ -112,7 +113,7 @@ const DUMMY_POSTS: Record<string, Post> = {
   },
 };
 
-const DUMMY_CHILD_POSTS: Post[] = [
+const ALL_CHILD_POSTS: Post[] = [
   {
     id: 'c1',
     title: 'AI Ethics and Privacy Concerns',
@@ -170,15 +171,59 @@ const DUMMY_CHILD_POSTS: Post[] = [
       },
     ],
   },
+  {
+    id: 'c4',
+    title: 'AI-Powered Drug Discovery',
+    description: 'Accelerating pharmaceutical research with AI',
+    likes_count: 689,
+    dislikes_count: 27,
+    spider_chains_count: 41,
+    views_count: 7891,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc4',
+        media_url: 'https://images.pexels.com/photos/3825517/pexels-photo-3825517.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: 'c5',
+    title: 'Wearable Health Tech Integration',
+    description: 'Connecting patient data through smart devices',
+    likes_count: 534,
+    dislikes_count: 19,
+    spider_chains_count: 36,
+    views_count: 6234,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc5',
+        media_url: 'https://images.pexels.com/photos/4386470/pexels-photo-4386470.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
 ];
 
 export default function PostDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const [post, setPost] = useState<Post | null>(null);
   const [childPosts, setChildPosts] = useState<Post[]>([]);
-  const [showIntentChain, setShowIntentChain] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [reachedEnd, setReachedEnd] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
   const [userLiked, setUserLiked] = useState(false);
   const [userDisliked, setUserDisliked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -192,9 +237,61 @@ export default function PostDetailPage() {
       setUserDisliked(postData.user_disliked);
       setLikesCount(postData.likes_count);
       setDislikesCount(postData.dislikes_count);
-      setChildPosts(DUMMY_CHILD_POSTS);
+
+      loadInitialChildPosts();
     }
   }, [id]);
+
+  const loadInitialChildPosts = () => {
+    const initialPosts = ALL_CHILD_POSTS.slice(0, 3);
+    setChildPosts(initialPosts);
+    setHasMorePosts(initialPosts.length < ALL_CHILD_POSTS.length);
+  };
+
+  const loadMoreChildPosts = () => {
+    if (isLoadingMore || !hasMorePosts) return;
+
+    setIsLoadingMore(true);
+
+    setTimeout(() => {
+      const currentLength = childPosts.length;
+      const nextBatch = ALL_CHILD_POSTS.slice(currentLength, currentLength + 2);
+
+      if (nextBatch.length > 0) {
+        setChildPosts([...childPosts, ...nextBatch]);
+
+        if (currentLength + nextBatch.length >= ALL_CHILD_POSTS.length) {
+          setHasMorePosts(false);
+          setReachedEnd(true);
+        }
+      } else {
+        setHasMorePosts(false);
+        setReachedEnd(true);
+      }
+
+      setIsLoadingMore(false);
+    }, 500);
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const scrollY = contentOffset.y;
+    const contentHeight = contentSize.height;
+    const screenHeight = layoutMeasurement.height;
+
+    setShowScrollToTop(scrollY > 300);
+
+    const paddingToBottom = 100;
+    if (scrollY + screenHeight >= contentHeight - paddingToBottom) {
+      if (hasMorePosts && !isLoadingMore) {
+        loadMoreChildPosts();
+      }
+    }
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
   const handleLike = () => {
     if (userLiked) {
@@ -253,9 +350,12 @@ export default function PostDetailPage() {
       </TouchableOpacity>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.mediaContainer}>
           <MediaCarousel
@@ -335,26 +435,6 @@ export default function PostDetailPage() {
           </View>
 
           {post.spider_chains_count > 0 && (
-            <TouchableOpacity
-              style={[styles.intentChainButton, { backgroundColor: colors.primary }]}
-              onPress={() => setShowIntentChain(!showIntentChain)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.intentChainButtonText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                {showIntentChain ? 'Hide' : 'View'} Intent Chain
-              </Text>
-              <ChevronDown
-                size={20}
-                color={theme === 'dark' ? colors.background : '#FFFFFF'}
-                strokeWidth={2}
-                style={{
-                  transform: [{ rotate: showIntentChain ? '180deg' : '0deg' }],
-                }}
-              />
-            </TouchableOpacity>
-          )}
-
-          {showIntentChain && (
             <View style={styles.intentChainContainer}>
               <Text style={[styles.intentChainTitle, { color: colors.text }]}>
                 Intent Chain Responses
@@ -403,10 +483,39 @@ export default function PostDetailPage() {
                   </View>
                 </TouchableOpacity>
               ))}
+
+              {isLoadingMore && (
+                <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                    Loading more...
+                  </Text>
+                </View>
+              )}
+
+              {reachedEnd && (
+                <View style={[styles.endMessageContainer, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.endMessageText, { color: colors.text }]}>
+                    You have reached the end for this chain
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </View>
       </ScrollView>
+
+      {showScrollToTop && (
+        <TouchableOpacity
+          style={[styles.scrollToTopButton, { backgroundColor: colors.primary }]}
+          onPress={scrollToTop}
+          activeOpacity={0.8}
+        >
+          <ArrowUp size={24} color={theme === 'dark' ? colors.background : '#FFFFFF'} strokeWidth={2} />
+          <Text style={[styles.scrollToTopText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+            Scroll to Top
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -495,21 +604,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6B7280',
   },
-  intentChainButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#1F2937',
-    marginBottom: 24,
-  },
-  intentChainButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
   intentChainContainer: {
     gap: 16,
   },
@@ -561,6 +655,52 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  loadingContainer: {
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  endMessageContainer: {
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    marginTop: 8,
+  },
+  endMessageText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 100 : 80,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: '#1F2937',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  scrollToTopText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   errorText: {
     fontSize: 16,

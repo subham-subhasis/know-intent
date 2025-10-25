@@ -1,5 +1,4 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
-import { ThumbsUp, ThumbsDown, GitBranch } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import MediaCarousel from './MediaCarousel';
 
@@ -48,32 +47,13 @@ export default function GridView({ posts, onPostPress, onEndReached, isLoading }
       onPress={() => onPostPress?.(item.id)}
       activeOpacity={0.7}
     >
-      <View style={styles.mediaWrapper}>
-        <MediaCarousel
-          media={item.media}
-          width={ITEM_WIDTH}
-          height={ITEM_WIDTH}
-          showIndicators={item.media.length > 1}
-          borderRadius={12}
-        />
-      </View>
-
-      <View style={[styles.statsOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.7)' }]}>
-        <View style={styles.statRow}>
-          <View style={styles.statItem}>
-            <ThumbsUp size={6} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.statText}>{formatCount(item.likes_count)}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <ThumbsDown size={6} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.statText}>{formatCount(item.dislikes_count)}</Text>
-          </View>
-          <View style={styles.statItem}>
-            <GitBranch size={6} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.statText}>{formatCount(item.spider_chains_count)}</Text>
-          </View>
-        </View>
-      </View>
+      <MediaCarousel
+        media={item.media}
+        width={ITEM_WIDTH}
+        height={ITEM_WIDTH}
+        showIndicators={item.media.length > 1}
+        borderRadius={12}
+      />
     </TouchableOpacity>
   );
 
@@ -109,35 +89,9 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: ITEM_WIDTH,
+    height: ITEM_WIDTH,
     borderRadius: 12,
     overflow: 'hidden',
-    position: 'relative',
-  },
-  mediaWrapper: {
-    width: ITEM_WIDTH,
-    height: ITEM_WIDTH,
-  },
-  statsOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 6,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  statText: {
-    fontSize: 5,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   emptyContainer: {
     alignItems: 'center',
