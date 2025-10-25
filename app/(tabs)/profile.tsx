@@ -182,7 +182,63 @@ export default function ProfilePage() {
   };
 
   const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
-    return [];
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const childPosts: Post[] = [
+      {
+        id: `${postId}-child-1`,
+        title: 'Detailed Analysis and Deep Dive',
+        description: 'Exploring the nuances and key insights',
+        likes_count: Math.floor(Math.random() * 2000) + 500,
+        dislikes_count: Math.floor(Math.random() * 100) + 10,
+        spider_chains_count: Math.floor(Math.random() * 50) + 5,
+        views_count: Math.floor(Math.random() * 10000) + 1000,
+        media: [
+          {
+            id: `${postId}-child-media-1`,
+            media_url: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg',
+            media_type: 'image' as const,
+            order_index: 0,
+          },
+        ],
+      },
+      {
+        id: `${postId}-child-2`,
+        title: 'Practical Applications',
+        description: 'Real-world implementation strategies',
+        likes_count: Math.floor(Math.random() * 1500) + 300,
+        dislikes_count: Math.floor(Math.random() * 80) + 5,
+        spider_chains_count: Math.floor(Math.random() * 40) + 3,
+        views_count: Math.floor(Math.random() * 8000) + 800,
+        media: [
+          {
+            id: `${postId}-child-media-2`,
+            media_url: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg',
+            media_type: 'image' as const,
+            order_index: 0,
+          },
+        ],
+      },
+      {
+        id: `${postId}-child-3`,
+        title: 'Advanced Techniques',
+        description: 'Expert-level tips and tricks',
+        likes_count: Math.floor(Math.random() * 3000) + 1000,
+        dislikes_count: Math.floor(Math.random() * 120) + 20,
+        spider_chains_count: Math.floor(Math.random() * 80) + 10,
+        views_count: Math.floor(Math.random() * 15000) + 2000,
+        media: [
+          {
+            id: `${postId}-child-media-3`,
+            media_url: 'https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg',
+            media_type: 'image' as const,
+            order_index: 0,
+          },
+        ],
+      },
+    ];
+
+    return childPosts;
   };
 
   const handlePostPress = (postId: string) => {

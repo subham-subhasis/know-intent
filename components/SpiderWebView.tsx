@@ -53,6 +53,14 @@ export default function SpiderWebView({
   const [expandedPosts, setExpandedPosts] = useState<Record<string, Post[]>>({});
   const [loadingChildren, setLoadingChildren] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    posts.forEach((post) => {
+      if (post.spider_chains_count > 0 && !expandedPosts[post.id] && !loadingChildren[post.id]) {
+        loadTopChild(post.id);
+      }
+    });
+  }, [posts]);
+
   const formatCount = (count: number) => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M`;
@@ -63,28 +71,32 @@ export default function SpiderWebView({
     return count.toString();
   };
 
-  const loadFirstChild = async (postId: string) => {
+  const loadTopChild = async (postId: string) => {
     if (loadingChildren[postId] || expandedPosts[postId]) return;
 
-    setLoadingChildren({ ...loadingChildren, [postId]: true });
+    setLoadingChildren((prev) => ({ ...prev, [postId]: true }));
     try {
       if (onLoadChildPosts) {
         const children = await onLoadChildPosts(postId, 1);
-        setExpandedPosts({ ...expandedPosts, [postId]: children.slice(0, 1) });
+        const topChild = children.sort((a, b) => {
+          const reachA = a.likes_count + (a.spider_chains_count * 10);
+          const reachB = b.likes_count + (b.spider_chains_count * 10);
+          return reachB - reachA;
+        })[0];
+        setExpandedPosts((prev) => ({ ...prev, [postId]: topChild ? [topChild] : [] }));
       }
     } catch (error) {
       console.error('Error loading child posts:', error);
     } finally {
-      setLoadingChildren({ ...loadingChildren, [postId]: false });
+      setLoadingChildren((prev) => ({ ...prev, [postId]: false }));
     }
   };
 
   const renderSpiderChain = (post: Post, depth: number = 0) => {
     const isRoot = depth === 0;
-    const cardWidth = isRoot ? width - 32 : width * 0.75;
+    const cardWidth = isRoot ? width - 32 : (width - 32) * 0.75;
     const cardHeight = isRoot ? 220 : 140;
     const childPost = expandedPosts[post.id]?.[0];
-    const hasMoreChains = post.spider_chains_count > 1;
 
     return (
       <View key={`${post.id}-${depth}`} style={[styles.spiderNode, isRoot && styles.rootNode]}>
@@ -138,7 +150,11 @@ export default function SpiderWebView({
 
         {isRoot && post.spider_chains_count > 0 && (
           <View style={styles.chainContainer}>
-            <View style={[styles.connectionLine, { backgroundColor: colors.border }]} />
+            <View style={[styles.treeNodeContainer]}>
+              <View style={[styles.verticalLine, { backgroundColor: colors.border }]} />
+              <View style={[styles.horizontalLine, { backgroundColor: colors.border }]} />
+              <View style={[styles.nodeCircle, { borderColor: colors.border, backgroundColor: colors.background }]} />
+            </View>
 
             {loadingChildren[post.id] ? (
               <View style={[styles.loadingContainer, { backgroundColor: colors.surface }]}>
@@ -149,17 +165,6 @@ export default function SpiderWebView({
                 {renderSpiderChain(childPost, depth + 1)}
               </View>
             ) : null}
-
-            {hasMoreChains && (
-              <TouchableOpacity
-                style={[styles.viewAllButton, { backgroundColor: colors.primary }]}
-                onPress={() => onViewAllChains?.(post.id)}
-              >
-                <Text style={styles.viewAllText}>
-                  View All {post.spider_chains_count} Intent Chains
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         )}
       </View>
@@ -256,43 +261,41 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   chainContainer: {
-    marginTop: 16,
-    paddingLeft: 20,
+    marginTop: 20,
+    position: 'relative',
   },
-  connectionLine: {
+  treeNodeContainer: {
     position: 'absolute',
+    left: 40,
+    top: -10,
+    zIndex: 1,
+  },
+  verticalLine: {
+    position: 'absolute',
+    left: 0,
     top: 0,
-    left: width / 2 - 16,
     width: 2,
-    height: 16,
+    height: 80,
+  },
+  horizontalLine: {
+    position: 'absolute',
+    left: 0,
+    top: 80,
+    width: 30,
+    height: 2,
+  },
+  nodeCircle: {
+    position: 'absolute',
+    left: 28,
+    top: 73,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
   },
   childWrapper: {
-    marginTop: 16,
-  },
-  loadChainButton: {
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  loadChainText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  viewAllButton: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  viewAllText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    marginLeft: 60,
+    marginTop: 20,
   },
   loadingContainer: {
     marginTop: 16,
