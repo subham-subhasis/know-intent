@@ -4,14 +4,15 @@ import {
   Text,
   StyleSheet,
   Platform,
-  ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
-import { Grid3x3, Network } from 'lucide-react-native';
+import { Grid3x3, Network, Plus } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import GridView from '@/components/GridView';
 import SpiderWebView from '@/components/SpiderWebView';
+import { UploadModal } from '@/components/UploadModal';
 
 type ViewMode = 'grid' | 'spider';
 
@@ -32,134 +33,154 @@ interface Post {
   child_posts?: Post[];
 }
 
+const DUMMY_POSTS: Post[] = [
+  {
+    id: '1',
+    title: 'The Future of AI in Healthcare',
+    description: 'Exploring how artificial intelligence is revolutionizing medical diagnostics',
+    likes_count: 1243,
+    dislikes_count: 45,
+    spider_chains_count: 87,
+    views_count: 15420,
+    media: [
+      {
+        id: 'm1',
+        media_url: 'https://images.pexels.com/photos/8438918/pexels-photo-8438918.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+      {
+        id: 'm2',
+        media_url: 'https://images.pexels.com/photos/7089020/pexels-photo-7089020.jpeg',
+        media_type: 'image',
+        order_index: 1,
+      },
+    ],
+  },
+  {
+    id: '2',
+    title: 'Sustainable Living Tips',
+    description: 'Simple ways to reduce your carbon footprint',
+    likes_count: 892,
+    dislikes_count: 23,
+    spider_chains_count: 54,
+    views_count: 9845,
+    media: [
+      {
+        id: 'm3',
+        media_url: 'https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: '3',
+    title: 'Mastering React Native',
+    description: 'Advanced patterns and best practices for mobile development',
+    likes_count: 2156,
+    dislikes_count: 67,
+    spider_chains_count: 143,
+    views_count: 28934,
+    media: [
+      {
+        id: 'm4',
+        media_url: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+      {
+        id: 'm5',
+        media_url: 'https://images.pexels.com/photos/546819/pexels-photo-546819.jpeg',
+        media_type: 'image',
+        order_index: 1,
+      },
+      {
+        id: 'm6',
+        media_url: 'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg',
+        media_type: 'image',
+        order_index: 2,
+      },
+    ],
+  },
+  {
+    id: '4',
+    title: 'Morning Workout Routine',
+    description: 'Start your day with energy and focus',
+    likes_count: 645,
+    dislikes_count: 18,
+    spider_chains_count: 32,
+    views_count: 7234,
+    media: [
+      {
+        id: 'm7',
+        media_url: 'https://images.pexels.com/photos/416778/pexels-photo-416778.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: '5',
+    title: 'Urban Photography Guide',
+    description: 'Capturing the essence of city life',
+    likes_count: 1567,
+    dislikes_count: 42,
+    spider_chains_count: 98,
+    views_count: 19842,
+    media: [
+      {
+        id: 'm8',
+        media_url: 'https://images.pexels.com/photos/2246476/pexels-photo-2246476.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+      {
+        id: 'm9',
+        media_url: 'https://images.pexels.com/photos/1105766/pexels-photo-1105766.jpeg',
+        media_type: 'image',
+        order_index: 1,
+      },
+    ],
+  },
+  {
+    id: '6',
+    title: 'Plant-Based Recipes',
+    description: 'Delicious and nutritious vegan meals',
+    likes_count: 934,
+    dislikes_count: 28,
+    spider_chains_count: 61,
+    views_count: 11234,
+    media: [
+      {
+        id: 'm10',
+        media_url: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+];
+
 export default function ProfilePage() {
   const { colors, theme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(DUMMY_POSTS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser();
   }, []);
 
-  useEffect(() => {
-    if (userId) {
-      loadPosts();
-    }
-  }, [userId, page]);
-
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id || null);
   };
 
-  const loadPosts = async () => {
-    if (!userId || !hasMore) return;
-
-    try {
-      setIsLoading(true);
-      const pageSize = 20;
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          title,
-          description,
-          likes_count,
-          dislikes_count,
-          spider_chains_count,
-          views_count,
-          created_at
-        `)
-        .eq('user_id', userId)
-        .is('parent_post_id', null)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      if (postsError) throw postsError;
-
-      if (!postsData || postsData.length < pageSize) {
-        setHasMore(false);
-      }
-
-      if (postsData && postsData.length > 0) {
-        const postIds = postsData.map(p => p.id);
-        const { data: mediaData, error: mediaError } = await supabase
-          .from('post_media')
-          .select('*')
-          .in('post_id', postIds)
-          .order('order_index', { ascending: true });
-
-        if (mediaError) throw mediaError;
-
-        const postsWithMedia = postsData.map(post => ({
-          ...post,
-          media: mediaData?.filter(m => m.post_id === post.id) || [],
-        }));
-
-        setPosts(prev => page === 1 ? postsWithMedia : [...prev, ...postsWithMedia]);
-      }
-    } catch (error) {
-      console.error('Error loading posts:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
-    try {
-      const pageSize = 10;
-      const from = (childPage - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data: childPosts, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          title,
-          description,
-          likes_count,
-          dislikes_count,
-          spider_chains_count,
-          views_count
-        `)
-        .eq('parent_post_id', postId)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      if (postsError) throw postsError;
-
-      if (!childPosts || childPosts.length === 0) return [];
-
-      const childPostIds = childPosts.map(p => p.id);
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('post_media')
-        .select('*')
-        .in('post_id', childPostIds)
-        .order('order_index', { ascending: true });
-
-      if (mediaError) throw mediaError;
-
-      return childPosts.map(post => ({
-        ...post,
-        media: mediaData?.filter(m => m.post_id === post.id) || [],
-      }));
-    } catch (error) {
-      console.error('Error loading child posts:', error);
-      return [];
-    }
-  };
-
-  const handleEndReached = () => {
-    if (!isLoading && hasMore) {
-      setPage(prev => prev + 1);
-    }
+    return [];
   };
 
   const handlePostPress = (postId: string) => {
@@ -186,27 +207,29 @@ export default function ProfilePage() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
-        <Text style={[styles.appName, { color: colors.text }]}>My Profile</Text>
-        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your content and spider chains</Text>
-      </View>
+        <View style={styles.headerContent}>
+          <View style={styles.leftSection}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+                U
+              </Text>
+            </View>
+            <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
+          </View>
 
-      <View style={[styles.profileInfo, { borderBottomColor: colors.borderLight, backgroundColor: colors.background }]}>
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
-        </View>
-        <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{posts.length}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalViews)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Views</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalChains)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Spider Chains</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.text }]}>{posts.length}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalViews)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Views</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalChains)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Intent Tree</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -221,13 +244,13 @@ export default function ProfilePage() {
         >
           <Grid3x3
             size={20}
-            color={viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary}
+            color={viewMode === 'grid' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
             strokeWidth={2}
           />
           <Text
             style={[
               styles.viewModeText,
-              { color: viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary },
+              { color: viewMode === 'grid' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
             ]}
           >
             Grid
@@ -243,16 +266,16 @@ export default function ProfilePage() {
         >
           <Network
             size={20}
-            color={viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary}
+            color={viewMode === 'spider' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
             strokeWidth={2}
           />
           <Text
             style={[
               styles.viewModeText,
-              { color: viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary },
+              { color: viewMode === 'spider' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
             ]}
           >
-            Spider Web
+            Intent Tree
           </Text>
         </TouchableOpacity>
       </View>
@@ -262,7 +285,6 @@ export default function ProfilePage() {
           <GridView
             posts={posts}
             onPostPress={handlePostPress}
-            onEndReached={handleEndReached}
             isLoading={isLoading}
           />
         ) : (
@@ -270,12 +292,28 @@ export default function ProfilePage() {
             posts={posts}
             onPostPress={handlePostPress}
             onViewAllChains={handleViewAllChains}
-            onEndReached={handleEndReached}
             onLoadChildPosts={loadChildPosts}
             isLoading={isLoading}
           />
         )}
       </View>
+
+      <TouchableOpacity
+        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
+        onPress={() => setShowUploadModal(true)}
+        activeOpacity={0.8}
+      >
+        <Plus size={28} color={theme === 'dark' ? colors.background : '#FFFFFF'} strokeWidth={2.5} />
+      </TouchableOpacity>
+
+      <Modal
+        visible={showUploadModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowUploadModal(false)}
+      >
+        <UploadModal onClose={() => setShowUploadModal(false)} />
+      </Modal>
     </View>
   );
 }
@@ -286,69 +324,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 12,
+    paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
-  appName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    letterSpacing: 2,
-  },
-  tagline: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: '#6B7280',
-    letterSpacing: 0.5,
-    marginTop: 2,
-  },
-  profileInfo: {
+  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    justifyContent: 'space-between',
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   userName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 16,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 24,
+    gap: 16,
   },
   statBox: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 10,
+    fontWeight: '600',
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 2,
   },
   viewModeContainer: {
     flexDirection: 'row',
@@ -374,5 +401,21 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 100 : 80,
+    right: 20,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
