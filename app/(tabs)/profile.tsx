@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -5,183 +6,182 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ThumbsUp, ThumbsDown, GitBranch, Eye } from 'lucide-react-native';
+import { Grid3x3, Network } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { supabase } from '@/lib/supabase';
+import GridView from '@/components/GridView';
+import SpiderWebView from '@/components/SpiderWebView';
 
-const { width } = Dimensions.get('window');
+type ViewMode = 'grid' | 'spider';
 
-const USER_VIDEOS = [
-  {
-    id: '1',
-    title: 'My Machine Learning Journey',
-    views: '245K',
-    likes: 12300,
-    dislikes: 120,
-    spiderChains: 450,
-    gradient: ['#667eea', '#764ba2'],
-    responses: [
-      {
-        id: '1-1',
-        title: 'Response: Building on your ML concepts',
-        creator: 'Tech Expert',
-        gradient: ['#f093fb', '#f5576c'],
-        position: { top: -40, left: 20 },
-        responses: [
-          {
-            id: '1-1-1',
-            title: 'Deep dive into neural networks',
-            creator: 'AI Researcher',
-            gradient: ['#4facfe', '#00f2fe'],
-            position: { top: -35, right: 15 },
-          },
-        ],
-      },
-      {
-        id: '1-2',
-        title: 'Alternative approach to ML',
-        creator: 'Data Scientist',
-        gradient: ['#43e97b', '#38f9d7'],
-        position: { top: -40, right: 20 },
-      },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Startup Tips for Beginners',
-    views: '180K',
-    likes: 8900,
-    dislikes: 90,
-    spiderChains: 320,
-    gradient: ['#fa709a', '#fee140'],
-    responses: [
-      {
-        id: '2-1',
-        title: 'Funding strategies explained',
-        creator: 'Entrepreneur',
-        gradient: ['#30cfd0', '#330867'],
-        position: { top: -45, left: 25 },
-      },
-    ],
-  },
-  {
-    id: '3',
-    title: 'Healthy Living Guide',
-    views: '512K',
-    likes: 28700,
-    dislikes: 210,
-    spiderChains: 890,
-    gradient: ['#a8edea', '#fed6e3'],
-    responses: [
-      {
-        id: '3-1',
-        title: 'Nutrition facts breakdown',
-        creator: 'Dietitian',
-        gradient: ['#ff9a9e', '#fecfef'],
-        position: { top: -40, left: 30 },
-        responses: [
-          {
-            id: '3-1-1',
-            title: 'Meal planning tips',
-            creator: 'Chef',
-            gradient: ['#ffecd2', '#fcb69f'],
-            position: { top: -35, left: 20 },
-          },
-        ],
-      },
-      {
-        id: '3-2',
-        title: 'Exercise routine complementing this',
-        creator: 'Fitness Coach',
-        gradient: ['#667eea', '#764ba2'],
-        position: { top: -40, right: 30 },
-      },
-    ],
-  },
-];
+interface Post {
+  id: string;
+  title: string;
+  description?: string;
+  likes_count: number;
+  dislikes_count: number;
+  spider_chains_count: number;
+  views_count: number;
+  media: Array<{
+    id: string;
+    media_url: string;
+    media_type: 'image' | 'video';
+    order_index: number;
+  }>;
+  child_posts?: Post[];
+}
 
 export default function ProfilePage() {
   const { colors, theme } = useTheme();
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadPosts();
+    }
+  }, [userId, page]);
+
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUserId(user?.id || null);
+  };
+
+  const loadPosts = async () => {
+    if (!userId || !hasMore) return;
+
+    try {
+      setIsLoading(true);
+      const pageSize = 20;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          description,
+          likes_count,
+          dislikes_count,
+          spider_chains_count,
+          views_count,
+          created_at
+        `)
+        .eq('user_id', userId)
+        .is('parent_post_id', null)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (postsError) throw postsError;
+
+      if (!postsData || postsData.length < pageSize) {
+        setHasMore(false);
+      }
+
+      if (postsData && postsData.length > 0) {
+        const postIds = postsData.map(p => p.id);
+        const { data: mediaData, error: mediaError } = await supabase
+          .from('post_media')
+          .select('*')
+          .in('post_id', postIds)
+          .order('order_index', { ascending: true });
+
+        if (mediaError) throw mediaError;
+
+        const postsWithMedia = postsData.map(post => ({
+          ...post,
+          media: mediaData?.filter(m => m.post_id === post.id) || [],
+        }));
+
+        setPosts(prev => page === 1 ? postsWithMedia : [...prev, ...postsWithMedia]);
+      }
+    } catch (error) {
+      console.error('Error loading posts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
+    try {
+      const pageSize = 10;
+      const from = (childPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data: childPosts, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          description,
+          likes_count,
+          dislikes_count,
+          spider_chains_count,
+          views_count
+        `)
+        .eq('parent_post_id', postId)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (postsError) throw postsError;
+
+      if (!childPosts || childPosts.length === 0) return [];
+
+      const childPostIds = childPosts.map(p => p.id);
+      const { data: mediaData, error: mediaError } = await supabase
+        .from('post_media')
+        .select('*')
+        .in('post_id', childPostIds)
+        .order('order_index', { ascending: true });
+
+      if (mediaError) throw mediaError;
+
+      return childPosts.map(post => ({
+        ...post,
+        media: mediaData?.filter(m => m.post_id === post.id) || [],
+      }));
+    } catch (error) {
+      console.error('Error loading child posts:', error);
+      return [];
+    }
+  };
+
+  const handleEndReached = () => {
+    if (!isLoading && hasMore) {
+      setPage(prev => prev + 1);
+    }
+  };
+
+  const handlePostPress = (postId: string) => {
+    console.log('Post pressed:', postId);
+  };
+
+  const handleViewAllChains = (postId: string) => {
+    console.log('View all chains for post:', postId);
+  };
 
   const formatCount = (count: number) => {
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    }
     if (count >= 1000) {
       return `${(count / 1000).toFixed(1)}K`;
     }
     return count.toString();
   };
 
-  const renderSpiderNode = (video: any, depth: number = 0, index: number = 0) => {
-    const isRoot = depth === 0;
-    const cardWidth = isRoot ? width - 32 : width * 0.6;
-    const cardHeight = isRoot ? 200 : 120;
-
-    return (
-      <View
-        key={video.id}
-        style={[
-          styles.spiderNode,
-          isRoot ? styles.rootNode : styles.responseNode,
-          { width: cardWidth },
-        ]}
-      >
-        <TouchableOpacity
-          style={[styles.spiderCard, { height: cardHeight }]}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={video.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.spiderCardGradient}
-          >
-            <View style={styles.spiderCardOverlay}>
-              <Text style={[styles.spiderTitle, isRoot && styles.rootTitle]} numberOfLines={2}>
-                {video.title}
-              </Text>
-              {!isRoot && video.creator && (
-                <Text style={styles.spiderCreator}>{video.creator}</Text>
-              )}
-              {isRoot && (
-                <View style={styles.rootStats}>
-                  <View style={styles.rootStatItem}>
-                    <Eye size={16} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={styles.rootStatText}>{video.views}</Text>
-                  </View>
-                  <View style={styles.rootStatItem}>
-                    <ThumbsUp size={16} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={styles.rootStatText}>{formatCount(video.likes)}</Text>
-                  </View>
-                  <View style={styles.rootStatItem}>
-                    <GitBranch size={16} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={styles.rootStatText}>{formatCount(video.spiderChains)}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {video.responses && video.responses.length > 0 && (
-          <View style={styles.responsesContainer}>
-            {video.responses.map((response: any, idx: number) => (
-              <View
-                key={response.id}
-                style={[
-                  styles.responseWrapper,
-                  response.position,
-                ]}
-              >
-                <View style={[styles.connectionLine, { backgroundColor: colors.border }]} />
-                {renderSpiderNode(response, depth + 1, idx)}
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    );
-  };
+  const totalViews = posts.reduce((sum, post) => sum + post.views_count, 0);
+  const totalChains = posts.reduce((sum, post) => sum + post.spider_chains_count, 0);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -190,45 +190,92 @@ export default function ProfilePage() {
         <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your content and spider chains</Text>
       </View>
 
-      <ScrollView
-        style={[styles.content, { backgroundColor: colors.background }]}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <View style={[styles.profileInfo, { borderBottomColor: colors.borderLight }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
+      <View style={[styles.profileInfo, { borderBottomColor: colors.borderLight, backgroundColor: colors.background }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>U</Text>
+        </View>
+        <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: colors.text }]}>{posts.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
           </View>
-          <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>{USER_VIDEOS.length}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Videos</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>937K</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Views</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>1.6K</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Spider Chains</Text>
-            </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalViews)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Views</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalChains)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Spider Chains</Text>
           </View>
         </View>
+      </View>
 
-        <View style={styles.spiderSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Spider Chains</Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-            Your videos and the trending responses they've inspired
+      <View style={[styles.viewModeContainer, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
+        <TouchableOpacity
+          style={[
+            styles.viewModeButton,
+            viewMode === 'grid' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setViewMode('grid')}
+        >
+          <Grid3x3
+            size={20}
+            color={viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary}
+            strokeWidth={2}
+          />
+          <Text
+            style={[
+              styles.viewModeText,
+              { color: viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary },
+            ]}
+          >
+            Grid
           </Text>
+        </TouchableOpacity>
 
-          {USER_VIDEOS.map((video, index) => (
-            <View key={video.id} style={styles.spiderChainContainer}>
-              {renderSpiderNode(video)}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+        <TouchableOpacity
+          style={[
+            styles.viewModeButton,
+            viewMode === 'spider' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => setViewMode('spider')}
+        >
+          <Network
+            size={20}
+            color={viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary}
+            strokeWidth={2}
+          />
+          <Text
+            style={[
+              styles.viewModeText,
+              { color: viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary },
+            ]}
+          >
+            Spider Web
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.content}>
+        {viewMode === 'grid' ? (
+          <GridView
+            posts={posts}
+            onPostPress={handlePostPress}
+            onEndReached={handleEndReached}
+            isLoading={isLoading}
+          />
+        ) : (
+          <SpiderWebView
+            posts={posts}
+            onPostPress={handlePostPress}
+            onViewAllChains={handleViewAllChains}
+            onEndReached={handleEndReached}
+            onLoadChildPosts={loadChildPosts}
+            isLoading={isLoading}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -258,12 +305,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     letterSpacing: 0.5,
     marginTop: 2,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    paddingBottom: Platform.OS === 'ios' ? 110 : 90,
   },
   profileInfo: {
     alignItems: 'center',
@@ -309,96 +350,29 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 4,
   },
-  spiderSection: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginBottom: 24,
-    lineHeight: 18,
-  },
-  spiderChainContainer: {
-    marginBottom: 100,
-    position: 'relative',
-  },
-  spiderNode: {
-    position: 'relative',
-  },
-  rootNode: {
-    marginBottom: 20,
-  },
-  responseNode: {
-    marginTop: 10,
-  },
-  spiderCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  spiderCardGradient: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  spiderCardOverlay: {
-    padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  spiderTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  rootTitle: {
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  spiderCreator: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
-  rootStats: {
+  viewModeContainer: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
   },
-  rootStatItem: {
+  viewModeButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
-  rootStatText: {
-    fontSize: 12,
+  viewModeText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
   },
-  responsesContainer: {
-    position: 'relative',
-    marginTop: 20,
-  },
-  responseWrapper: {
-    position: 'absolute',
-  },
-  connectionLine: {
-    position: 'absolute',
-    top: -20,
-    left: '50%',
-    width: 2,
-    height: 20,
-    backgroundColor: '#D1D5DB',
+  content: {
+    flex: 1,
   },
 });
