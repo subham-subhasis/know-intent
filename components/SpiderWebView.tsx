@@ -151,8 +151,22 @@ export default function SpiderWebView({
         {isRoot && post.spider_chains_count > 0 && (
           <View style={styles.chainContainer}>
             <View style={[styles.treeNodeContainer]}>
-              <View style={[styles.verticalLine, { backgroundColor: colors.border }]} />
-              <View style={[styles.horizontalLine, { backgroundColor: colors.border }]} />
+              <View style={styles.verticalLineContainer}>
+                {[...Array(8)].map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.verticalDot, { backgroundColor: colors.border }]}
+                  />
+                ))}
+              </View>
+              <View style={styles.horizontalLineContainer}>
+                {[...Array(6)].map((_, i) => (
+                  <View
+                    key={i}
+                    style={[styles.horizontalDot, { backgroundColor: colors.border }]}
+                  />
+                ))}
+              </View>
               <View style={[styles.nodeCircle, { borderColor: colors.border, backgroundColor: colors.background }]} />
             </View>
 
@@ -206,10 +220,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   spiderNode: {
-    marginBottom: 24,
+    marginBottom: 12,
   },
   rootNode: {
-    marginBottom: 32,
+    marginBottom: 16,
   },
   postCard: {
     borderRadius: 16,
@@ -261,33 +275,49 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   chainContainer: {
-    marginTop: 20,
+    marginTop: 8,
     position: 'relative',
   },
   treeNodeContainer: {
     position: 'absolute',
     left: 40,
-    top: -10,
+    top: -4,
     zIndex: 1,
   },
-  verticalLine: {
+  verticalLineContainer: {
     position: 'absolute',
     left: 0,
     top: 0,
     width: 2,
-    height: 80,
+    height: 40,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  horizontalLine: {
+  verticalDot: {
+    width: 2,
+    height: 3,
+    borderRadius: 1,
+  },
+  horizontalLineContainer: {
     position: 'absolute',
     left: 0,
-    top: 80,
+    top: 40,
     width: 30,
     height: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  horizontalDot: {
+    width: 3,
+    height: 2,
+    borderRadius: 1,
   },
   nodeCircle: {
     position: 'absolute',
     left: 28,
-    top: 73,
+    top: 33,
     width: 14,
     height: 14,
     borderRadius: 7,
@@ -295,7 +325,7 @@ const styles = StyleSheet.create({
   },
   childWrapper: {
     marginLeft: 60,
-    marginTop: 20,
+    marginTop: 8,
   },
   loadingContainer: {
     marginTop: 16,
