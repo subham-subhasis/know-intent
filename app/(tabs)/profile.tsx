@@ -213,10 +213,10 @@ export default function ProfilePage() {
           <View style={styles.leftSection}>
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
               <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                U
+                S
               </Text>
             </View>
-            <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>Subham</Text>
           </View>
 
           <View style={styles.statsRow}>
