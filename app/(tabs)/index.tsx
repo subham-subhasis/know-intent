@@ -262,7 +262,11 @@ export default function HomePage() {
         ) : (
           VIDEO_CARDS.map((video, index) => (
             <View key={video.id}>
-              <TouchableOpacity style={styles.videoCard} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.videoCard}
+                activeOpacity={0.8}
+                onPress={() => router.push(`/post/${video.id}`)}
+              >
                 <View style={styles.videoThumbnail}>
                   <LinearGradient
                     colors={['#667eea', '#764ba2']}

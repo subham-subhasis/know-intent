@@ -148,17 +148,7 @@ export default function SpiderWebView({
               <View style={styles.childWrapper}>
                 {renderSpiderChain(childPost, depth + 1)}
               </View>
-            ) : (
-              <TouchableOpacity
-                style={[styles.loadChainButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                onPress={() => loadFirstChild(post.id)}
-              >
-                <Text style={[styles.loadChainText, { color: colors.text }]}>
-                  View Spider Chain
-                </Text>
-                <ChevronRight size={16} color={colors.text} strokeWidth={2} />
-              </TouchableOpacity>
-            )}
+            ) : null}
 
             {hasMoreChains && (
               <TouchableOpacity
@@ -166,7 +156,7 @@ export default function SpiderWebView({
                 onPress={() => onViewAllChains?.(post.id)}
               >
                 <Text style={styles.viewAllText}>
-                  View All {post.spider_chains_count} Spider Chains
+                  View All {post.spider_chains_count} Intent Chains
                 </Text>
               </TouchableOpacity>
             )}

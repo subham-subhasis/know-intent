@@ -35,6 +35,104 @@ interface Post {
   }>;
 }
 
+const ALL_CHILD_POSTS_DATA: Post[] = [
+  {
+    id: 'c1',
+    title: 'AI Ethics and Privacy Concerns',
+    description: 'Discussing the ethical implications of AI in healthcare',
+    likes_count: 567,
+    dislikes_count: 23,
+    spider_chains_count: 0,
+    views_count: 6789,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc1',
+        media_url: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: 'c2',
+    title: 'Machine Learning Models in Diagnosis',
+    description: 'How ML is improving diagnostic accuracy',
+    likes_count: 823,
+    dislikes_count: 31,
+    spider_chains_count: 0,
+    views_count: 9234,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc2',
+        media_url: 'https://images.pexels.com/photos/8438979/pexels-photo-8438979.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: 'c3',
+    title: 'Telemedicine Revolution',
+    description: 'Remote healthcare powered by AI',
+    likes_count: 445,
+    dislikes_count: 18,
+    spider_chains_count: 0,
+    views_count: 5432,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc3',
+        media_url: 'https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: 'c4',
+    title: 'AI-Powered Drug Discovery',
+    description: 'Accelerating pharmaceutical research with AI',
+    likes_count: 689,
+    dislikes_count: 27,
+    spider_chains_count: 0,
+    views_count: 7891,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc4',
+        media_url: 'https://images.pexels.com/photos/3825517/pexels-photo-3825517.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+  {
+    id: 'c5',
+    title: 'Wearable Health Tech Integration',
+    description: 'Connecting patient data through smart devices',
+    likes_count: 534,
+    dislikes_count: 19,
+    spider_chains_count: 0,
+    views_count: 6234,
+    user_liked: false,
+    user_disliked: false,
+    media: [
+      {
+        id: 'mc5',
+        media_url: 'https://images.pexels.com/photos/4386470/pexels-photo-4386470.jpeg',
+        media_type: 'image',
+        order_index: 0,
+      },
+    ],
+  },
+];
+
 const DUMMY_POSTS: Record<string, Post> = {
   '1': {
     id: '1',
@@ -111,105 +209,13 @@ const DUMMY_POSTS: Record<string, Post> = {
       },
     ],
   },
+  c1: ALL_CHILD_POSTS_DATA[0],
+  c2: ALL_CHILD_POSTS_DATA[1],
+  c3: ALL_CHILD_POSTS_DATA[2],
+  c4: ALL_CHILD_POSTS_DATA[3],
+  c5: ALL_CHILD_POSTS_DATA[4],
 };
 
-const ALL_CHILD_POSTS: Post[] = [
-  {
-    id: 'c1',
-    title: 'AI Ethics and Privacy Concerns',
-    description: 'Discussing the ethical implications of AI in healthcare',
-    likes_count: 567,
-    dislikes_count: 23,
-    spider_chains_count: 34,
-    views_count: 6789,
-    user_liked: false,
-    user_disliked: false,
-    media: [
-      {
-        id: 'mc1',
-        media_url: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg',
-        media_type: 'image',
-        order_index: 0,
-      },
-    ],
-  },
-  {
-    id: 'c2',
-    title: 'Machine Learning Models in Diagnosis',
-    description: 'How ML is improving diagnostic accuracy',
-    likes_count: 823,
-    dislikes_count: 31,
-    spider_chains_count: 45,
-    views_count: 9234,
-    user_liked: false,
-    user_disliked: false,
-    media: [
-      {
-        id: 'mc2',
-        media_url: 'https://images.pexels.com/photos/8438979/pexels-photo-8438979.jpeg',
-        media_type: 'image',
-        order_index: 0,
-      },
-    ],
-  },
-  {
-    id: 'c3',
-    title: 'Telemedicine Revolution',
-    description: 'Remote healthcare powered by AI',
-    likes_count: 445,
-    dislikes_count: 18,
-    spider_chains_count: 28,
-    views_count: 5432,
-    user_liked: false,
-    user_disliked: false,
-    media: [
-      {
-        id: 'mc3',
-        media_url: 'https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg',
-        media_type: 'image',
-        order_index: 0,
-      },
-    ],
-  },
-  {
-    id: 'c4',
-    title: 'AI-Powered Drug Discovery',
-    description: 'Accelerating pharmaceutical research with AI',
-    likes_count: 689,
-    dislikes_count: 27,
-    spider_chains_count: 41,
-    views_count: 7891,
-    user_liked: false,
-    user_disliked: false,
-    media: [
-      {
-        id: 'mc4',
-        media_url: 'https://images.pexels.com/photos/3825517/pexels-photo-3825517.jpeg',
-        media_type: 'image',
-        order_index: 0,
-      },
-    ],
-  },
-  {
-    id: 'c5',
-    title: 'Wearable Health Tech Integration',
-    description: 'Connecting patient data through smart devices',
-    likes_count: 534,
-    dislikes_count: 19,
-    spider_chains_count: 36,
-    views_count: 6234,
-    user_liked: false,
-    user_disliked: false,
-    media: [
-      {
-        id: 'mc5',
-        media_url: 'https://images.pexels.com/photos/4386470/pexels-photo-4386470.jpeg',
-        media_type: 'image',
-        order_index: 0,
-      },
-    ],
-  },
-];
 
 export default function PostDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -243,9 +249,9 @@ export default function PostDetailPage() {
   }, [id]);
 
   const loadInitialChildPosts = () => {
-    const initialPosts = ALL_CHILD_POSTS.slice(0, 3);
+    const initialPosts = ALL_CHILD_POSTS_DATA.slice(0, 3);
     setChildPosts(initialPosts);
-    setHasMorePosts(initialPosts.length < ALL_CHILD_POSTS.length);
+    setHasMorePosts(initialPosts.length < ALL_CHILD_POSTS_DATA.length);
   };
 
   const loadMoreChildPosts = () => {
@@ -255,12 +261,12 @@ export default function PostDetailPage() {
 
     setTimeout(() => {
       const currentLength = childPosts.length;
-      const nextBatch = ALL_CHILD_POSTS.slice(currentLength, currentLength + 2);
+      const nextBatch = ALL_CHILD_POSTS_DATA.slice(currentLength, currentLength + 2);
 
       if (nextBatch.length > 0) {
         setChildPosts([...childPosts, ...nextBatch]);
 
-        if (currentLength + nextBatch.length >= ALL_CHILD_POSTS.length) {
+        if (currentLength + nextBatch.length >= ALL_CHILD_POSTS_DATA.length) {
           setHasMorePosts(false);
           setReachedEnd(true);
         }
@@ -444,15 +450,30 @@ export default function PostDetailPage() {
                   key={childPost.id}
                   style={[styles.childPostCard, { backgroundColor: colors.surface }]}
                   activeOpacity={0.8}
+                  onPress={() => router.push(`/post/${childPost.id}`)}
                 >
-                  <View style={styles.childPostMedia}>
+                  <View style={styles.childPostMediaContainer}>
                     <MediaCarousel
                       media={childPost.media}
-                      width={120}
-                      height={120}
-                      showIndicators={false}
+                      width={width - 40}
+                      height={height * 0.5}
+                      showIndicators={childPost.media.length > 1}
                       borderRadius={12}
                     />
+                    <View style={styles.childActionButtons}>
+                      <View style={[styles.childActionButton, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]}>
+                        <ThumbsUp size={16} color={colors.text} strokeWidth={2} />
+                        <Text style={[styles.childActionButtonText, { color: colors.text }]}>
+                          {formatCount(childPost.likes_count)}
+                        </Text>
+                      </View>
+                      <View style={[styles.childActionButton, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]}>
+                        <ThumbsDown size={16} color={colors.text} strokeWidth={2} />
+                        <Text style={[styles.childActionButtonText, { color: colors.text }]}>
+                          {formatCount(childPost.dislikes_count)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                   <View style={styles.childPostInfo}>
                     <Text style={[styles.childPostTitle, { color: colors.text }]} numberOfLines={2}>
@@ -466,20 +487,6 @@ export default function PostDetailPage() {
                         {childPost.description}
                       </Text>
                     )}
-                    <View style={styles.childPostStats}>
-                      <View style={styles.childPostStat}>
-                        <ThumbsUp size={12} color={colors.textSecondary} strokeWidth={2} />
-                        <Text style={[styles.childPostStatText, { color: colors.textSecondary }]}>
-                          {formatCount(childPost.likes_count)}
-                        </Text>
-                      </View>
-                      <View style={styles.childPostStat}>
-                        <ThumbsDown size={12} color={colors.textSecondary} strokeWidth={2} />
-                        <Text style={[styles.childPostStatText, { color: colors.textSecondary }]}>
-                          {formatCount(childPost.dislikes_count)}
-                        </Text>
-                      </View>
-                    </View>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -614,47 +621,55 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   childPostCard: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 12,
+    marginBottom: 20,
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
-  },
-  childPostMedia: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
     overflow: 'hidden',
   },
-  childPostInfo: {
-    flex: 1,
-    justifyContent: 'space-between',
+  childPostMediaContainer: {
+    position: 'relative',
   },
-  childPostTitle: {
-    fontSize: 16,
+  childActionButtons: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  childActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  childActionButtonText: {
+    fontSize: 12,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 4,
+  },
+  childPostInfo: {
+    padding: 16,
+  },
+  childPostTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+    lineHeight: 24,
   },
   childPostDescription: {
     fontSize: 14,
     fontWeight: '500',
     color: '#6B7280',
-    marginBottom: 8,
-  },
-  childPostStats: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  childPostStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  childPostStatText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
+    lineHeight: 20,
   },
   loadingContainer: {
     padding: 20,
