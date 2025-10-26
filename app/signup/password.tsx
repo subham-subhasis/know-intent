@@ -15,6 +15,7 @@ import {
 import { useState, useRef } from 'react';
 import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { signupStorage } from '@/lib/signupStorage';
 
 export default function PasswordPage() {
   const [password, setPassword] = useState('');
@@ -52,6 +53,7 @@ export default function PasswordPage() {
 
   const handleNext = () => {
     if (validatePassword()) {
+      signupStorage.setData('password', password);
       router.push('/signup/dateofbirth');
     }
   };

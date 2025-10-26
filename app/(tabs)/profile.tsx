@@ -10,7 +10,6 @@ import {
 import { Grid3x3, Network, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
-import { supabase } from '@/lib/supabase';
 import GridView from '@/components/GridView';
 import SpiderWebView from '@/components/SpiderWebView';
 import { UploadModal } from '@/components/UploadModal';
@@ -177,7 +176,8 @@ export default function ProfilePage() {
   }, []);
 
   const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // TODO: Replace with Cognito user fetch
+    const user: { id?: string } | null = null;
     setUserId(user?.id || null);
   };
 

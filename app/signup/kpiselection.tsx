@@ -11,16 +11,20 @@ import {
   ScrollView,
   ImageBackground,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { useState, useRef } from 'react';
 import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import kpiData from '@/assets/json/kpi.json';
+import { signupStorage } from '@/lib/signupStorage';
+import { authService } from '@/lib/auth';
 
 export default function KPISelectionPage() {
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const spinValue = useRef(new Animated.Value(0)).current;
 
@@ -48,9 +52,45 @@ export default function KPISelectionPage() {
     return true;
   };
 
-  const handleNext = () => {
-    if (validateSelection()) {
-      router.replace('/(tabs)');
+  const handleNext = async () => {
+    if (!validateSelection()) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const signupData = signupStorage.getData();
+
+      const result = await authService.signUp({
+        username: signupData.emailOrPhone,
+        password: signupData.password,
+        email: signupData.isEmail ? signupData.emailOrPhone : undefined,
+        phone: signupData.isEmail ? undefined : signupData.emailOrPhone,
+      });
+
+      if (result.success) {
+        const authResult = await authService.initiateAuth({
+          username: signupData.emailOrPhone,
+        });
+
+        if (authResult.success) {
+          router.push({
+            pathname: '/signup/verifyotp',
+            params: {
+              username: signupData.emailOrPhone,
+              identifier: signupData.emailOrPhone,
+            },
+          });
+        } else {
+          setError(authResult.error || 'Failed to send OTP');
+        }
+      } else {
+        setError(result.error || 'Sign up failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during sign up');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -184,13 +224,17 @@ export default function KPISelectionPage() {
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (selectedKPIs.length === 0 && !suggestions.trim()) && styles.buttonDisabled
+                    (loading || (selectedKPIs.length === 0 && !suggestions.trim())) && styles.buttonDisabled
                   ]}
-                  disabled={selectedKPIs.length === 0 && !suggestions.trim()}
+                  disabled={loading || (selectedKPIs.length === 0 && !suggestions.trim())}
                   onPress={handleNext}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.buttonText}>Next</Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.buttonText}>Next</Text>
+                  )}
                 </TouchableOpacity>
 
                 <TouchableOpacity

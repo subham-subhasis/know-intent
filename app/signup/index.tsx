@@ -16,6 +16,7 @@ import { useState, useRef } from 'react';
 import { X, ChevronDown } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import countryCodes from '@/assets/json/country-codes.json';
+import { signupStorage } from '@/lib/signupStorage';
 
 export default function SignupPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -49,6 +50,8 @@ export default function SignupPage() {
         setError('Please enter a valid email address');
         return;
       }
+      signupStorage.setData('emailOrPhone', emailAddress);
+      signupStorage.setData('isEmail', true);
       router.push('/signup/password');
     } else {
       if (!phoneNumber.trim()) {
@@ -59,6 +62,10 @@ export default function SignupPage() {
         setError('Please enter a valid phone number');
         return;
       }
+      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber}`;
+      signupStorage.setData('emailOrPhone', fullPhone);
+      signupStorage.setData('isEmail', false);
+      signupStorage.setData('countryCode', countryCode);
       router.push('/signup/password');
     }
   };
