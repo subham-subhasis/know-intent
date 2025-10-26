@@ -178,7 +178,7 @@ export default function ProfilePage() {
   const getCurrentUser = async () => {
     // TODO: Replace with Cognito user fetch
     const user: { id?: string } | null = null;
-    setUserId(user?.id || null);
+    setUserId(user?.id ?? null);
   };
 
   const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
