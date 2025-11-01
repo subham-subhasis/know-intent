@@ -40,6 +40,7 @@ const VIDEO_CARDS = [
     likes: 45200,
     dislikes: 320,
     spiderChains: 1240,
+    aspectRatio: '9:16',
   },
   {
     id: '2',
@@ -50,6 +51,7 @@ const VIDEO_CARDS = [
     likes: 32100,
     dislikes: 450,
     spiderChains: 890,
+    aspectRatio: '1:1',
   },
   {
     id: '3',
@@ -60,6 +62,7 @@ const VIDEO_CARDS = [
     likes: 78900,
     dislikes: 210,
     spiderChains: 2340,
+    aspectRatio: '16:9',
   },
   {
     id: '4',
@@ -70,6 +73,7 @@ const VIDEO_CARDS = [
     likes: 125000,
     dislikes: 890,
     spiderChains: 4560,
+    aspectRatio: '4:5',
   },
   {
     id: '5',
@@ -80,6 +84,7 @@ const VIDEO_CARDS = [
     likes: 28700,
     dislikes: 180,
     spiderChains: 670,
+    aspectRatio: '9:16',
   },
 ];
 
@@ -168,6 +173,22 @@ export default function HomePage() {
 
   const handleSpiderChain = (videoId: string) => {
     setExpandedVideoId(prev => prev === videoId ? null : videoId);
+  };
+
+  const getAspectRatioHeight = (aspectRatio: string) => {
+    const cardWidth = width;
+    switch (aspectRatio) {
+      case '9:16':
+        return cardWidth * (16 / 9);
+      case '1:1':
+        return cardWidth;
+      case '16:9':
+        return cardWidth * (9 / 16);
+      case '4:5':
+        return cardWidth * (5 / 4);
+      default:
+        return cardWidth * (9 / 16);
+    }
   };
 
   const renderAdSection = (index: number) => {
@@ -267,7 +288,7 @@ export default function HomePage() {
                 activeOpacity={0.8}
                 onPress={() => router.push(`/post/${video.id}`)}
               >
-                <View style={styles.videoThumbnail}>
+                <View style={[styles.videoThumbnail, { height: getAspectRatioHeight(video.aspectRatio) }]}>
                   <LinearGradient
                     colors={['#667eea', '#764ba2']}
                     start={{ x: 0, y: 0 }}
@@ -461,19 +482,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   feedContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 0,
+    paddingTop: 0,
     paddingBottom: Platform.OS === 'ios' ? 110 : 90,
   },
   videoCard: {
-    marginBottom: 16,
-    borderRadius: 16,
+    marginBottom: 0,
+    borderRadius: 0,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
     overflow: 'hidden',
   },
   videoThumbnail: {
@@ -516,16 +532,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   uploadContainer: {
-    marginTop: 16,
-    marginBottom: 16,
-    borderRadius: 20,
+    marginTop: 0,
+    marginBottom: 0,
+    borderRadius: 0,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
     minHeight: 500,
   },
   durationBadge: {
@@ -569,14 +580,9 @@ const styles = StyleSheet.create({
   },
   adSection: {
     height: 80,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 0,
+    marginBottom: 0,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
   },
   adGradient: {
     flex: 1,
