@@ -118,7 +118,7 @@ export default function PasswordPage() {
         >
           <View style={styles.header}>
             <View>
-              <Text style={styles.appName}>Intent</Text>
+              <Text style={styles.appName}>KnowIntent</Text>
               <Text style={styles.tagline}>Scroll. Learn. Inspire.</Text>
             </View>
           </View>
