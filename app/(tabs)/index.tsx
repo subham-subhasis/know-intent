@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
+import Svg, { Circle } from 'react-native-svg';
 import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
 import { Modal } from 'react-native';
@@ -248,8 +249,12 @@ export default function HomePage() {
   const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('trending');
   const [currentContent, setCurrentContent] = useState(CATEGORY_CONTENT.trending);
+  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -290,14 +295,38 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (showTrendingModal && currentTrendingIndex < currentContent.length - 1) {
-      timer = setTimeout(() => {
-        setCurrentTrendingIndex(prev => prev + 1);
-      }, 30000);
+    if (showTrendingModal && !isPaused) {
+      setProgress(0);
+
+      progressInterval.current = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            return 100;
+          }
+          return prev + (100 / 60);
+        });
+      }, 100);
+
+      timerRef.current = setTimeout(() => {
+        if (currentTrendingIndex < currentContent.length - 1) {
+          setCurrentTrendingIndex(prev => prev + 1);
+          setProgress(0);
+        }
+      }, 6000);
     }
-    return () => clearTimeout(timer);
-  }, [showTrendingModal, currentTrendingIndex, currentContent]);
+
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [showTrendingModal, currentTrendingIndex, currentContent, isPaused]);
+
+  useEffect(() => {
+    if (!showTrendingModal) {
+      setProgress(0);
+      setIsPaused(false);
+    }
+  }, [showTrendingModal]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -381,13 +410,23 @@ export default function HomePage() {
   const handlePrevious = () => {
     if (currentTrendingIndex > 0) {
       setCurrentTrendingIndex(prev => prev - 1);
+      setProgress(0);
     }
   };
 
   const handleNext = () => {
     if (currentTrendingIndex < currentContent.length - 1) {
       setCurrentTrendingIndex(prev => prev + 1);
+      setProgress(0);
     }
+  };
+
+  const handlePressIn = () => {
+    setIsPaused(true);
+  };
+
+  const handlePressOut = () => {
+    setIsPaused(false);
   };
 
   const getAspectRatioHeight = (aspectRatio: string) => {
@@ -612,11 +651,37 @@ export default function HomePage() {
             <Text style={[styles.fullScreenTitle, { color: colors.text }]}>
               {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} ({currentTrendingIndex + 1}/{currentContent.length})
             </Text>
-            <View style={styles.fullScreenCloseButton} />
+            <View style={styles.progressCircleContainer}>
+              <Svg width="40" height="40" viewBox="0 0 40 40">
+                <Circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="rgba(255, 255, 255, 0.3)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                <Circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="#FFFFFF"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 16}`}
+                  strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`}
+                  strokeLinecap="round"
+                  transform="rotate(-90 20 20)"
+                />
+              </Svg>
+            </View>
           </View>
 
-          <View
+          <TouchableOpacity
             style={styles.fullScreenScrollView}
+            activeOpacity={1}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
             {...panResponder.panHandlers}
           >
             <View style={styles.fullScreenContentContainer}>
@@ -654,7 +719,7 @@ export default function HomePage() {
                 </Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.fullScreenActions}>
             <TouchableOpacity
@@ -977,6 +1042,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   fullScreenCloseButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressCircleContainer: {
     width: 40,
     height: 40,
     justifyContent: 'center',
