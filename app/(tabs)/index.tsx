@@ -618,6 +618,13 @@ export default function HomePage() {
                       <Text style={styles.statText}>{formatCount(video.spiderChains)}</Text>
                     </TouchableOpacity>
                   </View>
+                  <View style={styles.topBadgeRow}>
+                    <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
+                      <View style={styles.usernameBadge}>
+                        <Text style={[styles.usernameBadgeText, { color: colors.primary }]}>{video.creator}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
                   </View>
@@ -627,13 +634,12 @@ export default function HomePage() {
                 </View>
 
                 <View style={styles.videoInfo}>
-                  <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
-                    <Text style={[styles.creatorName, { color: colors.primary }]}>{video.creator}</Text>
-                  </TouchableOpacity>
-                  <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={2}>
-                    {video.title}
-                  </Text>
-                  <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={2}>
+                      {video.title}
+                    </Text>
+                    <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
+                  </View>
                 </View>
               </TouchableOpacity>
 
@@ -967,15 +973,36 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  topBadgeRow: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+  },
+  usernameBadge: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  usernameBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   videoInfo: {
     padding: 16,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   videoTitle: {
+    flex: 1,
     fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
-    marginTop: 6,
-    marginBottom: 8,
     lineHeight: 22,
   },
   videoMeta: {
@@ -989,9 +1016,10 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   viewsText: {
-    fontSize: 13,
-    fontWeight: '400',
+    fontSize: 12,
+    fontWeight: '500',
     color: '#9CA3AF',
+    marginTop: 2,
   },
   adSection: {
     height: 80,
