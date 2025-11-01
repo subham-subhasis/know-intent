@@ -87,8 +87,10 @@ const VIDEO_CARDS = [
     id: '1',
     title: 'Understanding Machine Learning Basics',
     creator: 'Tech Explained',
+    username: 'techexplained',
     views: '1.2M',
     duration: '12:45',
+    postedTime: '2h ago',
     likes: 45200,
     dislikes: 320,
     spiderChains: 1240,
@@ -99,8 +101,10 @@ const VIDEO_CARDS = [
     id: '2',
     title: 'Building a Successful Startup',
     creator: 'Business Insider',
+    username: 'businessinsider',
     views: '890K',
     duration: '15:30',
+    postedTime: '5h ago',
     likes: 32100,
     dislikes: 450,
     spiderChains: 890,
@@ -111,8 +115,10 @@ const VIDEO_CARDS = [
     id: '3',
     title: 'Healthy Morning Routines',
     creator: 'Wellness Guide',
+    username: 'wellnessguide',
     views: '2.1M',
     duration: '8:20',
+    postedTime: '1d ago',
     likes: 78900,
     dislikes: 210,
     spiderChains: 2340,
@@ -123,8 +129,10 @@ const VIDEO_CARDS = [
     id: '4',
     title: 'The Future of Space Exploration',
     creator: 'Science Today',
+    username: 'sciencetoday',
     views: '3.5M',
     duration: '20:15',
+    postedTime: '3d ago',
     likes: 125000,
     dislikes: 890,
     spiderChains: 4560,
@@ -135,8 +143,10 @@ const VIDEO_CARDS = [
     id: '5',
     title: 'Digital Art Masterclass',
     creator: 'Creative Studio',
+    username: 'creativestudio',
     views: '650K',
     duration: '25:10',
+    postedTime: '1w ago',
     likes: 28700,
     dislikes: 180,
     spiderChains: 670,
@@ -147,8 +157,10 @@ const VIDEO_CARDS = [
     id: '6',
     title: 'Mindfulness & Meditation',
     creator: 'Zen Master',
+    username: 'zenmaster',
     views: '1.5M',
     duration: '10:30',
+    postedTime: '4h ago',
     likes: 62000,
     dislikes: 150,
     spiderChains: 1580,
@@ -609,6 +621,9 @@ export default function HomePage() {
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
                   </View>
+                  <View style={styles.postedTimeBadge}>
+                    <Text style={styles.postedTimeText}>{video.postedTime}</Text>
+                  </View>
                 </View>
 
                 <View style={styles.videoInfo}>
@@ -616,7 +631,9 @@ export default function HomePage() {
                     {video.title}
                   </Text>
                   <View style={styles.videoMeta}>
-                    <Text style={[styles.creatorName, { color: colors.textSecondary }]}>{video.creator}</Text>
+                    <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
+                      <Text style={[styles.creatorName, { color: colors.primary }]}>{video.creator}</Text>
+                    </TouchableOpacity>
                     <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
                   </View>
                 </View>
@@ -935,6 +952,20 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  postedTimeBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 80,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  postedTimeText: {
+    fontSize: 11,
     fontWeight: '600',
     color: '#FFFFFF',
   },
