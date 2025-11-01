@@ -17,6 +17,7 @@ import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
 import { Modal } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -124,11 +125,77 @@ const AD_VARIANTS = [
   },
 ];
 
+const TOP_10_TRENDING = [
+  {
+    id: 't1',
+    title: 'AI Revolution in 2025',
+    thumbnail: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 98,
+  },
+  {
+    id: 't2',
+    title: 'Sustainable Architecture',
+    thumbnail: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 96,
+  },
+  {
+    id: 't3',
+    title: 'Ocean Conservation',
+    thumbnail: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 95,
+  },
+  {
+    id: 't4',
+    title: 'Space Tourism',
+    thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 94,
+  },
+  {
+    id: 't5',
+    title: 'Mental Health Awareness',
+    thumbnail: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 93,
+  },
+  {
+    id: 't6',
+    title: 'Quantum Computing',
+    thumbnail: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 92,
+  },
+  {
+    id: 't7',
+    title: 'Urban Farming',
+    thumbnail: 'https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 91,
+  },
+  {
+    id: 't8',
+    title: 'Electric Vehicles',
+    thumbnail: 'https://images.pexels.com/photos/110844/pexels-photo-110844.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 90,
+  },
+  {
+    id: 't9',
+    title: 'Digital Art NFTs',
+    thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 89,
+  },
+  {
+    id: 't10',
+    title: 'Remote Work Future',
+    thumbnail: 'https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    qualityScore: 88,
+  },
+];
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
+  const [showTrendingModal, setShowTrendingModal] = useState(false);
+  const [hasViewedTrending, setHasViewedTrending] = useState(false);
+  const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
   const router = useRouter();
   const { colors, theme } = useTheme();
 
@@ -139,6 +206,30 @@ export default function HomePage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const checkViewedStatus = async () => {
+      try {
+        const viewed = await AsyncStorage.getItem('trending_viewed');
+        if (viewed === 'true') {
+          setHasViewedTrending(true);
+        }
+      } catch (error) {
+        console.error('Error checking viewed status:', error);
+      }
+    };
+    checkViewedStatus();
+  }, []);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showTrendingModal && currentTrendingIndex < TOP_10_TRENDING.length - 1) {
+      timer = setTimeout(() => {
+        setCurrentTrendingIndex(prev => prev + 1);
+      }, 30000);
+    }
+    return () => clearTimeout(timer);
+  }, [showTrendingModal, currentTrendingIndex]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -191,6 +282,28 @@ export default function HomePage() {
 
   const handleSpiderChain = (videoId: string) => {
     setExpandedVideoId(prev => prev === videoId ? null : videoId);
+  };
+
+  const handleOpenTrending = async () => {
+    setShowTrendingModal(true);
+    setCurrentTrendingIndex(0);
+    try {
+      await AsyncStorage.setItem('trending_viewed', 'true');
+      setHasViewedTrending(true);
+    } catch (error) {
+      console.error('Error saving viewed status:', error);
+    }
+  };
+
+  const handleCloseTrending = () => {
+    setShowTrendingModal(false);
+    setCurrentTrendingIndex(0);
+  };
+
+  const handleViewPost = () => {
+    const currentPost = TOP_10_TRENDING[currentTrendingIndex];
+    handleCloseTrending();
+    router.push(`/post/${currentPost.id}`);
   };
 
   const getAspectRatioHeight = (aspectRatio: string) => {
@@ -275,9 +388,19 @@ export default function HomePage() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.storiesContent}
       >
-        {STORY_DATA.map((story) => (
-          <TouchableOpacity key={story.id} style={styles.storyContainer} activeOpacity={0.7}>
-            <LinearGradient colors={story.gradient} style={styles.storyCircle} />
+        {STORY_DATA.map((story, index) => (
+          <TouchableOpacity
+            key={story.id}
+            style={styles.storyContainer}
+            activeOpacity={0.7}
+            onPress={index === 0 ? handleOpenTrending : undefined}
+          >
+            <View style={styles.storyCircleWrapper}>
+              <LinearGradient colors={story.gradient} style={styles.storyCircle} />
+              {index === 0 && !hasViewedTrending && (
+                <View style={styles.redNotificationDot} />
+              )}
+            </View>
             <Text style={[styles.storyName, { color: colors.text }]} numberOfLines={1}>
               {story.name}
             </Text>
@@ -384,6 +507,75 @@ export default function HomePage() {
           ))
         )}
       </ScrollView>
+
+      <Modal
+        visible={showTrendingModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseTrending}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.trendingModalContainer, { backgroundColor: colors.surface }]}>
+            <View style={styles.trendingHeader}>
+              <Text style={[styles.trendingTitle, { color: colors.text }]}>
+                Top 10 Trending ({currentTrendingIndex + 1}/10)
+              </Text>
+              <TouchableOpacity onPress={handleCloseTrending} style={styles.closeButton}>
+                <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.trendingContent}>
+              <Image
+                source={{ uri: TOP_10_TRENDING[currentTrendingIndex].thumbnail }}
+                style={styles.trendingImage}
+                resizeMode="cover"
+              />
+              <View style={styles.trendingInfo}>
+                <Text style={[styles.trendingPostTitle, { color: colors.text }]}>
+                  {TOP_10_TRENDING[currentTrendingIndex].title}
+                </Text>
+                <View style={styles.qualityScoreContainer}>
+                  <Sparkles size={16} color="#FFD700" strokeWidth={2} fill="#FFD700" />
+                  <Text style={[styles.qualityScore, { color: colors.textSecondary }]}>
+                    Quality Score: {TOP_10_TRENDING[currentTrendingIndex].qualityScore}/100
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.trendingTabs}>
+              {TOP_10_TRENDING.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.trendingTab,
+                    { backgroundColor: index === currentTrendingIndex ? colors.primary : colors.border },
+                  ]}
+                  onPress={() => setCurrentTrendingIndex(index)}
+                >
+                  <Text style={[
+                    styles.trendingTabText,
+                    { color: index === currentTrendingIndex ? '#FFFFFF' : colors.textSecondary },
+                  ]}>
+                    {index + 1}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.trendingActions}>
+              <TouchableOpacity
+                style={[styles.viewDetailsButton, { backgroundColor: colors.primary }]}
+                onPress={handleViewPost}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.viewDetailsButtonText}>View Details</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -463,16 +655,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    maxHeight: 100,
+    maxHeight: 90,
   },
   storiesContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 12,
   },
   storyContainer: {
     alignItems: 'center',
     width: 70,
+  },
+  storyCircleWrapper: {
+    position: 'relative',
   },
   storyCircle: {
     width: 60,
@@ -486,6 +681,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  redNotificationDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   storyName: {
     fontSize: 11,
@@ -656,5 +862,112 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trendingModalContainer: {
+    width: width - 40,
+    maxHeight: height * 0.8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  trendingHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  trendingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    fontWeight: '400',
+    color: '#6B7280',
+  },
+  trendingContent: {
+    padding: 20,
+  },
+  trendingImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  trendingInfo: {
+    gap: 8,
+  },
+  trendingPostTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  qualityScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  qualityScore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  trendingTabs: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  trendingTab: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trendingTabText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  trendingActions: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  viewDetailsButton: {
+    backgroundColor: '#1F2937',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  viewDetailsButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
