@@ -8,10 +8,11 @@ import {
   Dimensions,
   BackHandler,
   Image,
+  PanResponder,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User } from 'lucide-react-native';
+import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
@@ -22,14 +23,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width, height } = Dimensions.get('window');
 
 const STORY_DATA = [
-  { id: '1', name: 'Your Story', gradient: ['#667eea', '#764ba2'] },
-  { id: '2', name: 'Tech', gradient: ['#f093fb', '#f5576c'] },
-  { id: '3', name: 'Business', gradient: ['#4facfe', '#00f2fe'] },
-  { id: '4', name: 'Health', gradient: ['#43e97b', '#38f9d7'] },
-  { id: '5', name: 'Science', gradient: ['#fa709a', '#fee140'] },
-  { id: '6', name: 'Art', gradient: ['#30cfd0', '#330867'] },
-  { id: '7', name: 'Music', gradient: ['#a8edea', '#fed6e3'] },
-  { id: '8', name: 'Sports', gradient: ['#ff9a9e', '#fecfef'] },
+  { id: '1', name: 'Your Story', gradient: ['#667eea', '#764ba2'], category: 'trending' },
+  { id: '2', name: 'Tech', gradient: ['#f093fb', '#f5576c'], category: 'tech' },
+  { id: '3', name: 'Business', gradient: ['#4facfe', '#00f2fe'], category: 'business' },
+  { id: '4', name: 'Health', gradient: ['#43e97b', '#38f9d7'], category: 'health' },
+  { id: '5', name: 'Science', gradient: ['#fa709a', '#fee140'], category: 'science' },
+  { id: '6', name: 'Art', gradient: ['#30cfd0', '#330867'], category: 'art' },
+  { id: '7', name: 'Music', gradient: ['#a8edea', '#fed6e3'], category: 'music' },
+  { id: '8', name: 'Sports', gradient: ['#ff9a9e', '#fecfef'], category: 'sports' },
 ];
 
 const VIDEO_CARDS = [
@@ -125,68 +126,69 @@ const AD_VARIANTS = [
   },
 ];
 
-const TOP_10_TRENDING = [
-  {
-    id: 't1',
-    title: 'AI Revolution in 2025',
-    thumbnail: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 98,
-  },
-  {
-    id: 't2',
-    title: 'Sustainable Architecture',
-    thumbnail: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 96,
-  },
-  {
-    id: 't3',
-    title: 'Ocean Conservation',
-    thumbnail: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 95,
-  },
-  {
-    id: 't4',
-    title: 'Space Tourism',
-    thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 94,
-  },
-  {
-    id: 't5',
-    title: 'Mental Health Awareness',
-    thumbnail: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 93,
-  },
-  {
-    id: 't6',
-    title: 'Quantum Computing',
-    thumbnail: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 92,
-  },
-  {
-    id: 't7',
-    title: 'Urban Farming',
-    thumbnail: 'https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 91,
-  },
-  {
-    id: 't8',
-    title: 'Electric Vehicles',
-    thumbnail: 'https://images.pexels.com/photos/110844/pexels-photo-110844.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 90,
-  },
-  {
-    id: 't9',
-    title: 'Digital Art NFTs',
-    thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 89,
-  },
-  {
-    id: 't10',
-    title: 'Remote Work Future',
-    thumbnail: 'https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=1080',
-    qualityScore: 88,
-  },
-];
+const CATEGORY_CONTENT: Record<string, Array<{ id: string; title: string; thumbnail: string }>> = {
+  trending: [
+    { id: 't1', title: 'AI Revolution in 2025', thumbnail: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't2', title: 'Sustainable Architecture', thumbnail: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't3', title: 'Ocean Conservation', thumbnail: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't4', title: 'Space Tourism', thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't5', title: 'Mental Health Awareness', thumbnail: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't6', title: 'Quantum Computing', thumbnail: 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't7', title: 'Urban Farming', thumbnail: 'https://images.pexels.com/photos/1301856/pexels-photo-1301856.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't8', title: 'Electric Vehicles', thumbnail: 'https://images.pexels.com/photos/110844/pexels-photo-110844.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't9', title: 'Digital Art NFTs', thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 't10', title: 'Remote Work Future', thumbnail: 'https://images.pexels.com/photos/4050315/pexels-photo-4050315.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  tech: [
+    { id: 'tech1', title: 'AI & Machine Learning', thumbnail: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'tech2', title: 'Cloud Computing', thumbnail: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'tech3', title: 'Blockchain Technology', thumbnail: 'https://images.pexels.com/photos/8370752/pexels-photo-8370752.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'tech4', title: 'Cybersecurity', thumbnail: 'https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'tech5', title: '5G Networks', thumbnail: 'https://images.pexels.com/photos/4271927/pexels-photo-4271927.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  business: [
+    { id: 'biz1', title: 'Startup Success Stories', thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'biz2', title: 'Marketing Strategies', thumbnail: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'biz3', title: 'Leadership Skills', thumbnail: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'biz4', title: 'Financial Planning', thumbnail: 'https://images.pexels.com/photos/3943716/pexels-photo-3943716.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'biz5', title: 'Team Building', thumbnail: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  health: [
+    { id: 'health1', title: 'Yoga & Meditation', thumbnail: 'https://images.pexels.com/photos/3768593/pexels-photo-3768593.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'health2', title: 'Nutrition Guide', thumbnail: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'health3', title: 'Fitness Workouts', thumbnail: 'https://images.pexels.com/photos/4162449/pexels-photo-4162449.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'health4', title: 'Mental Wellness', thumbnail: 'https://images.pexels.com/photos/3822621/pexels-photo-3822621.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'health5', title: 'Sleep Quality', thumbnail: 'https://images.pexels.com/photos/3771069/pexels-photo-3771069.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  science: [
+    { id: 'sci1', title: 'Space Exploration', thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sci2', title: 'Climate Science', thumbnail: 'https://images.pexels.com/photos/60013/desert-drought-dehydrated-clay-soil-60013.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sci3', title: 'Biotechnology', thumbnail: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sci4', title: 'Physics Discoveries', thumbnail: 'https://images.pexels.com/photos/256262/pexels-photo-256262.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sci5', title: 'Marine Biology', thumbnail: 'https://images.pexels.com/photos/1001682/pexels-photo-1001682.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  art: [
+    { id: 'art1', title: 'Digital Art', thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'art2', title: 'Abstract Painting', thumbnail: 'https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'art3', title: 'Street Art', thumbnail: 'https://images.pexels.com/photos/1183992/pexels-photo-1183992.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'art4', title: 'Photography', thumbnail: 'https://images.pexels.com/photos/1303081/pexels-photo-1303081.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'art5', title: 'Sculpture', thumbnail: 'https://images.pexels.com/photos/1191710/pexels-photo-1191710.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  music: [
+    { id: 'music1', title: 'Music Production', thumbnail: 'https://images.pexels.com/photos/1916821/pexels-photo-1916821.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'music2', title: 'Live Concerts', thumbnail: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'music3', title: 'Jazz & Blues', thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'music4', title: 'Classical Music', thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'music5', title: 'Electronic Music', thumbnail: 'https://images.pexels.com/photos/1763067/pexels-photo-1763067.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+  sports: [
+    { id: 'sport1', title: 'Football', thumbnail: 'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sport2', title: 'Basketball', thumbnail: 'https://images.pexels.com/photos/1752757/pexels-photo-1752757.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sport3', title: 'Swimming', thumbnail: 'https://images.pexels.com/photos/863988/pexels-photo-863988.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sport4', title: 'Tennis', thumbnail: 'https://images.pexels.com/photos/209977/pexels-photo-209977.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+    { id: 'sport5', title: 'Cycling', thumbnail: 'https://images.pexels.com/photos/100582/pexels-photo-100582.jpeg?auto=compress&cs=tinysrgb&w=1080' },
+  ],
+};
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
@@ -196,8 +198,26 @@ export default function HomePage() {
   const [showTrendingModal, setShowTrendingModal] = useState(false);
   const [hasViewedTrending, setHasViewedTrending] = useState(false);
   const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string>('trending');
+  const [currentContent, setCurrentContent] = useState(CATEGORY_CONTENT.trending);
   const router = useRouter();
   const { colors, theme } = useTheme();
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dx) > 20;
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dx > 50 && currentTrendingIndex > 0) {
+          handlePrevious();
+        } else if (gestureState.dx < -50 && currentTrendingIndex < currentContent.length - 1) {
+          handleNext();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -223,13 +243,13 @@ export default function HomePage() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (showTrendingModal && currentTrendingIndex < TOP_10_TRENDING.length - 1) {
+    if (showTrendingModal && currentTrendingIndex < currentContent.length - 1) {
       timer = setTimeout(() => {
         setCurrentTrendingIndex(prev => prev + 1);
       }, 30000);
     }
     return () => clearTimeout(timer);
-  }, [showTrendingModal, currentTrendingIndex]);
+  }, [showTrendingModal, currentTrendingIndex, currentContent]);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -284,14 +304,18 @@ export default function HomePage() {
     setExpandedVideoId(prev => prev === videoId ? null : videoId);
   };
 
-  const handleOpenTrending = async () => {
+  const handleOpenTrending = async (category: string) => {
+    setSelectedCategory(category);
+    setCurrentContent(CATEGORY_CONTENT[category]);
     setShowTrendingModal(true);
     setCurrentTrendingIndex(0);
-    try {
-      await AsyncStorage.setItem('trending_viewed', 'true');
-      setHasViewedTrending(true);
-    } catch (error) {
-      console.error('Error saving viewed status:', error);
+    if (category === 'trending') {
+      try {
+        await AsyncStorage.setItem('trending_viewed', 'true');
+        setHasViewedTrending(true);
+      } catch (error) {
+        console.error('Error saving viewed status:', error);
+      }
     }
   };
 
@@ -301,9 +325,21 @@ export default function HomePage() {
   };
 
   const handleViewPost = () => {
-    const currentPost = TOP_10_TRENDING[currentTrendingIndex];
+    const currentPost = currentContent[currentTrendingIndex];
     handleCloseTrending();
     router.push(`/post/${currentPost.id}`);
+  };
+
+  const handlePrevious = () => {
+    if (currentTrendingIndex > 0) {
+      setCurrentTrendingIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentTrendingIndex < currentContent.length - 1) {
+      setCurrentTrendingIndex(prev => prev + 1);
+    }
   };
 
   const getAspectRatioHeight = (aspectRatio: string) => {
@@ -393,7 +429,7 @@ export default function HomePage() {
             key={story.id}
             style={styles.storyContainer}
             activeOpacity={0.7}
-            onPress={index === 0 ? handleOpenTrending : undefined}
+            onPress={() => handleOpenTrending(story.category)}
           >
             <View style={styles.storyCircleWrapper}>
               <LinearGradient colors={story.gradient} style={styles.storyCircle} />
@@ -510,69 +546,70 @@ export default function HomePage() {
 
       <Modal
         visible={showTrendingModal}
-        transparent
+        transparent={false}
         animationType="fade"
         onRequestClose={handleCloseTrending}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.trendingModalContainer, { backgroundColor: colors.surface }]}>
-            <View style={styles.trendingHeader}>
-              <Text style={[styles.trendingTitle, { color: colors.text }]}>
-                Top 10 Trending ({currentTrendingIndex + 1}/10)
-              </Text>
-              <TouchableOpacity onPress={handleCloseTrending} style={styles.closeButton}>
-                <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>✕</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={[styles.fullScreenModal, { backgroundColor: colors.background }]}>
+          <View style={styles.fullScreenHeader}>
+            <TouchableOpacity onPress={handleCloseTrending} style={styles.fullScreenCloseButton}>
+              <Text style={styles.fullScreenCloseText}>✕</Text>
+            </TouchableOpacity>
+            <Text style={[styles.fullScreenTitle, { color: colors.text }]}>
+              {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} ({currentTrendingIndex + 1}/{currentContent.length})
+            </Text>
+            <View style={styles.fullScreenCloseButton} />
+          </View>
 
-            <View style={styles.trendingContent}>
+          <View
+            style={styles.fullScreenScrollView}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.fullScreenContentContainer}>
               <Image
-                source={{ uri: TOP_10_TRENDING[currentTrendingIndex].thumbnail }}
-                style={styles.trendingImage}
+                source={{ uri: currentContent[currentTrendingIndex].thumbnail }}
+                style={styles.fullScreenImage}
                 resizeMode="cover"
               />
-              <View style={styles.trendingInfo}>
-                <Text style={[styles.trendingPostTitle, { color: colors.text }]}>
-                  {TOP_10_TRENDING[currentTrendingIndex].title}
+
+              <View style={styles.fullScreenOverlay}>
+                {currentTrendingIndex > 0 && (
+                  <TouchableOpacity
+                    style={[styles.arrowButton, styles.leftArrow]}
+                    onPress={handlePrevious}
+                    activeOpacity={0.7}
+                  >
+                    <ChevronLeft size={32} color="#FFFFFF" strokeWidth={3} />
+                  </TouchableOpacity>
+                )}
+
+                {currentTrendingIndex < currentContent.length - 1 && (
+                  <TouchableOpacity
+                    style={[styles.arrowButton, styles.rightArrow]}
+                    onPress={handleNext}
+                    activeOpacity={0.7}
+                  >
+                    <ChevronRight size={32} color="#FFFFFF" strokeWidth={3} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.fullScreenInfo}>
+                <Text style={styles.fullScreenPostTitle}>
+                  {currentContent[currentTrendingIndex].title}
                 </Text>
-                <View style={styles.qualityScoreContainer}>
-                  <Sparkles size={16} color="#FFD700" strokeWidth={2} fill="#FFD700" />
-                  <Text style={[styles.qualityScore, { color: colors.textSecondary }]}>
-                    Quality Score: {TOP_10_TRENDING[currentTrendingIndex].qualityScore}/100
-                  </Text>
-                </View>
               </View>
             </View>
+          </View>
 
-            <View style={styles.trendingTabs}>
-              {TOP_10_TRENDING.map((item, index) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.trendingTab,
-                    { backgroundColor: index === currentTrendingIndex ? colors.primary : colors.border },
-                  ]}
-                  onPress={() => setCurrentTrendingIndex(index)}
-                >
-                  <Text style={[
-                    styles.trendingTabText,
-                    { color: index === currentTrendingIndex ? '#FFFFFF' : colors.textSecondary },
-                  ]}>
-                    {index + 1}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.trendingActions}>
-              <TouchableOpacity
-                style={[styles.viewDetailsButton, { backgroundColor: colors.primary }]}
-                onPress={handleViewPost}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.viewDetailsButtonText}>View Details</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.fullScreenActions}>
+            <TouchableOpacity
+              style={[styles.fullScreenButton, { backgroundColor: colors.primary }]}
+              onPress={handleViewPost}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.fullScreenButtonText}>View Details</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -660,11 +697,11 @@ const styles = StyleSheet.create({
   storiesContent: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    gap: 12,
+    gap: 8,
   },
   storyContainer: {
     alignItems: 'center',
-    width: 70,
+    width: 64,
   },
   storyCircleWrapper: {
     position: 'relative',
@@ -863,109 +900,104 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.4)',
   },
-  modalOverlay: {
+  fullScreenModal: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#000000',
   },
-  trendingModalContainer: {
-    width: width - 40,
-    maxHeight: height * 0.8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  trendingHeader: {
+  fullScreenHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  trendingTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    fontWeight: '400',
-    color: '#6B7280',
-  },
-  trendingContent: {
-    padding: 20,
-  },
-  trendingImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  trendingInfo: {
-    gap: 8,
-  },
-  trendingPostTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  qualityScoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  qualityScore: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  trendingTabs: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    zIndex: 10,
   },
-  trendingTab: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E5E7EB',
+  fullScreenCloseButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  trendingTabText: {
-    fontSize: 12,
+  fullScreenCloseText: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#FFFFFF',
+  },
+  fullScreenTitle: {
+    fontSize: 16,
     fontWeight: '700',
-    color: '#6B7280',
+    color: '#FFFFFF',
   },
-  trendingActions: {
+  fullScreenScrollView: {
+    flex: 1,
+  },
+  fullScreenContentContainer: {
+    width: width,
+    height: height - (Platform.OS === 'ios' ? 200 : 180),
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  fullScreenImage: {
+    width: width,
+    height: '100%',
+  },
+  fullScreenOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 20,
   },
-  viewDetailsButton: {
+  arrowButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  leftArrow: {
+    marginRight: 'auto',
+  },
+  rightArrow: {
+    marginLeft: 'auto',
+  },
+  fullScreenInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 16,
+    borderRadius: 12,
+  },
+  fullScreenPostTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  fullScreenActions: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  fullScreenButton: {
     backgroundColor: '#1F2937',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
   },
-  viewDetailsButtonText: {
+  fullScreenButtonText: {
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
