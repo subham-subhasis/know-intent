@@ -3,6 +3,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   Platform,
   Dimensions,
@@ -549,20 +550,19 @@ export default function HomePage() {
         ))}
       </ScrollView>
 
-      <ScrollView
+      <FlatList
         style={[styles.feedSection, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.feedContent}
-      >
-        {loading ? (
-          <>
-            <ShimmerCard />
-            <ShimmerCard />
-            <ShimmerCard />
-          </>
-        ) : (
-          VIDEO_CARDS.map((video, index) => (
-            <View key={video.id}>
+        data={loading ? [1, 2, 3] : VIDEO_CARDS}
+        keyExtractor={(item) => loading ? `shimmer-${item}` : item.id}
+        renderItem={({ item: video, index }) => {
+          if (loading) {
+            return <ShimmerCard />;
+          }
+
+          return (
+            <View>
               <TouchableOpacity
                 style={styles.videoCard}
                 activeOpacity={0.8}
@@ -654,9 +654,9 @@ export default function HomePage() {
 
               {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
-          ))
-        )}
-      </ScrollView>
+          );
+        }}
+      />
 
       <Modal
         visible={showTrendingModal}
