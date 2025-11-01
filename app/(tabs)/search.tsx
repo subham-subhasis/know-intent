@@ -143,11 +143,6 @@ export default function SearchPage() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
-        <Text style={[styles.appName, { color: colors.text }]}>Search</Text>
-        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Discover new content</Text>
-      </View>
-
       <View style={[styles.searchSection, { backgroundColor: colors.background }]}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SearchIcon size={20} color={colors.textSecondary} strokeWidth={2} />
@@ -169,27 +164,45 @@ export default function SearchPage() {
 
       <View style={styles.trendingSection}>
         <View style={styles.sectionHeader}>
-          <TrendingUp size={20} color={colors.text} strokeWidth={2} />
+          <TrendingUp size={18} color={colors.text} strokeWidth={2} />
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Trending Searches</Text>
         </View>
 
-        <FlatList
-          ref={trendingScrollRef}
-          data={TRENDING_SEARCHES}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.trendingScrollContent}
-          keyExtractor={(item, index) => `${item}-${index}`}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.trendingChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              activeOpacity={0.7}
-              onPress={() => handleTrendingPress(item)}
-            >
-              <Text style={[styles.trendingText, { color: colors.textSecondary }]}>{item}</Text>
-            </TouchableOpacity>
-          )}
-        />
+        <View style={styles.trendingRows}>
+          <FlatList
+            ref={trendingScrollRef}
+            data={TRENDING_SEARCHES.slice(0, Math.ceil(TRENDING_SEARCHES.length / 2))}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.trendingScrollContent}
+            keyExtractor={(item, index) => `row1-${item}-${index}`}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.trendingChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                activeOpacity={0.7}
+                onPress={() => handleTrendingPress(item)}
+              >
+                <Text style={[styles.trendingText, { color: colors.textSecondary }]}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+          <FlatList
+            data={TRENDING_SEARCHES.slice(Math.ceil(TRENDING_SEARCHES.length / 2))}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.trendingScrollContent}
+            keyExtractor={(item, index) => `row2-${item}-${index}`}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.trendingChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                activeOpacity={0.7}
+                onPress={() => handleTrendingPress(item)}
+              >
+                <Text style={[styles.trendingText, { color: colors.textSecondary }]}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
       </View>
 
       <ScrollView
@@ -264,29 +277,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  appName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    letterSpacing: 2,
-  },
-  tagline: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: '#6B7280',
-    letterSpacing: 0.5,
-    marginTop: 2,
-  },
   searchSection: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
   },
   searchBar: {
@@ -307,36 +301,39 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   trendingSection: {
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
   },
+  trendingRows: {
+    gap: 8,
+  },
   trendingScrollContent: {
     paddingHorizontal: 16,
-    gap: 10,
+    gap: 8,
   },
   trendingChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    borderWidth: 2,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    marginRight: 10,
   },
   trendingText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
     color: '#4B5563',
   },
@@ -345,8 +342,8 @@ const styles = StyleSheet.create({
   },
   resultsHeader: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
   },
   resultsTitle: {
     fontSize: 20,
