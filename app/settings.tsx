@@ -23,6 +23,10 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, colors, toggleTheme } = useTheme();
 
+  const handleLogout = () => {
+    router.replace('/');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
@@ -94,7 +98,11 @@ export default function SettingsPage() {
           })}
         </View>
 
-        <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#FEE2E2', borderColor: theme === 'dark' ? '#991b1b' : '#FECACA' }]} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: theme === 'dark' ? '#7f1d1d' : '#FEE2E2', borderColor: theme === 'dark' ? '#991b1b' : '#FECACA' }]}
+          activeOpacity={0.8}
+          onPress={handleLogout}
+        >
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
