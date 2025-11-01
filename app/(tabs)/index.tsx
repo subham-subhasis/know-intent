@@ -7,6 +7,7 @@ import {
   Platform,
   Dimensions,
   BackHandler,
+  Image,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,7 +41,8 @@ const VIDEO_CARDS = [
     likes: 45200,
     dislikes: 320,
     spiderChains: 1240,
-    aspectRatio: '9:16',
+    aspectRatio: '1:1',
+    thumbnail: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1080',
   },
   {
     id: '2',
@@ -51,7 +53,8 @@ const VIDEO_CARDS = [
     likes: 32100,
     dislikes: 450,
     spiderChains: 890,
-    aspectRatio: '1:1',
+    aspectRatio: '16:9',
+    thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200',
   },
   {
     id: '3',
@@ -62,7 +65,8 @@ const VIDEO_CARDS = [
     likes: 78900,
     dislikes: 210,
     spiderChains: 2340,
-    aspectRatio: '16:9',
+    aspectRatio: '4:5',
+    thumbnail: 'https://images.pexels.com/photos/3768593/pexels-photo-3768593.jpeg?auto=compress&cs=tinysrgb&w=1080',
   },
   {
     id: '4',
@@ -73,7 +77,8 @@ const VIDEO_CARDS = [
     likes: 125000,
     dislikes: 890,
     spiderChains: 4560,
-    aspectRatio: '4:5',
+    aspectRatio: '1:1',
+    thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080',
   },
   {
     id: '5',
@@ -84,7 +89,20 @@ const VIDEO_CARDS = [
     likes: 28700,
     dislikes: 180,
     spiderChains: 670,
-    aspectRatio: '9:16',
+    aspectRatio: '16:9',
+    thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  },
+  {
+    id: '6',
+    title: 'Mindfulness & Meditation',
+    creator: 'Zen Master',
+    views: '1.5M',
+    duration: '10:30',
+    likes: 62000,
+    dislikes: 150,
+    spiderChains: 1580,
+    aspectRatio: '4:5',
+    thumbnail: 'https://images.pexels.com/photos/3822621/pexels-photo-3822621.jpeg?auto=compress&cs=tinysrgb&w=1080',
   },
 ];
 
@@ -178,8 +196,6 @@ export default function HomePage() {
   const getAspectRatioHeight = (aspectRatio: string) => {
     const cardWidth = width;
     switch (aspectRatio) {
-      case '9:16':
-        return cardWidth * (16 / 9);
       case '1:1':
         return cardWidth;
       case '16:9':
@@ -289,11 +305,10 @@ export default function HomePage() {
                 onPress={() => router.push(`/post/${video.id}`)}
               >
                 <View style={[styles.videoThumbnail, { height: getAspectRatioHeight(video.aspectRatio) }]}>
-                  <LinearGradient
-                    colors={['#667eea', '#764ba2']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.thumbnailGradient}
+                  <Image
+                    source={{ uri: video.thumbnail }}
+                    style={styles.thumbnailImage}
+                    resizeMode="cover"
                   />
                   <View style={styles.statsOverlay}>
                     <TouchableOpacity
@@ -497,7 +512,7 @@ const styles = StyleSheet.create({
     height: 200,
     position: 'relative',
   },
-  thumbnailGradient: {
+  thumbnailImage: {
     width: '100%',
     height: '100%',
   },
