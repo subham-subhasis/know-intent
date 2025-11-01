@@ -210,7 +210,7 @@ export default function HomePage() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.appName, { color: colors.text }]}>Intent</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>KnowIntent</Text>
           <Text style={[styles.tagline, { color: colors.textSecondary }]}>Scroll. Learn. Inspire.</Text>
         </View>
         <View style={styles.headerRight}>
