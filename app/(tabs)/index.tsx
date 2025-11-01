@@ -627,15 +627,13 @@ export default function HomePage() {
                 </View>
 
                 <View style={styles.videoInfo}>
+                  <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
+                    <Text style={[styles.creatorName, { color: colors.primary }]}>{video.creator}</Text>
+                  </TouchableOpacity>
                   <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={2}>
                     {video.title}
                   </Text>
-                  <View style={styles.videoMeta}>
-                    <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
-                      <Text style={[styles.creatorName, { color: colors.primary }]}>{video.creator}</Text>
-                    </TouchableOpacity>
-                    <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
-                  </View>
+                  <Text style={[styles.viewsText, { color: colors.textTertiary }]}>{video.views} views</Text>
                 </View>
               </TouchableOpacity>
 
@@ -976,6 +974,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
+    marginTop: 6,
     marginBottom: 8,
     lineHeight: 22,
   },
@@ -985,8 +984,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   creatorName: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#6B7280',
   },
   viewsText: {
