@@ -23,14 +23,62 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width, height } = Dimensions.get('window');
 
 const STORY_DATA = [
-  { id: '1', name: 'Your Story', gradient: ['#667eea', '#764ba2'], category: 'trending' },
-  { id: '2', name: 'Tech', gradient: ['#f093fb', '#f5576c'], category: 'tech' },
-  { id: '3', name: 'Business', gradient: ['#4facfe', '#00f2fe'], category: 'business' },
-  { id: '4', name: 'Health', gradient: ['#43e97b', '#38f9d7'], category: 'health' },
-  { id: '5', name: 'Science', gradient: ['#fa709a', '#fee140'], category: 'science' },
-  { id: '6', name: 'Art', gradient: ['#30cfd0', '#330867'], category: 'art' },
-  { id: '7', name: 'Music', gradient: ['#a8edea', '#fed6e3'], category: 'music' },
-  { id: '8', name: 'Sports', gradient: ['#ff9a9e', '#fecfef'], category: 'sports' },
+  {
+    id: '1',
+    name: 'Your Story',
+    gradient: ['#667eea', '#764ba2'],
+    category: 'trending',
+    thumbnail: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '2',
+    name: 'Tech',
+    gradient: ['#f093fb', '#f5576c'],
+    category: 'tech',
+    thumbnail: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '3',
+    name: 'Business',
+    gradient: ['#4facfe', '#00f2fe'],
+    category: 'business',
+    thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '4',
+    name: 'Health',
+    gradient: ['#43e97b', '#38f9d7'],
+    category: 'health',
+    thumbnail: 'https://images.pexels.com/photos/3768593/pexels-photo-3768593.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '5',
+    name: 'Science',
+    gradient: ['#fa709a', '#fee140'],
+    category: 'science',
+    thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '6',
+    name: 'Art',
+    gradient: ['#30cfd0', '#330867'],
+    category: 'art',
+    thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '7',
+    name: 'Music',
+    gradient: ['#a8edea', '#fed6e3'],
+    category: 'music',
+    thumbnail: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
+  {
+    id: '8',
+    name: 'Sports',
+    gradient: ['#ff9a9e', '#fecfef'],
+    category: 'sports',
+    thumbnail: 'https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg?auto=compress&cs=tinysrgb&w=400'
+  },
 ];
 
 const VIDEO_CARDS = [
@@ -432,7 +480,13 @@ export default function HomePage() {
             onPress={() => handleOpenTrending(story.category)}
           >
             <View style={styles.storyCircleWrapper}>
-              <LinearGradient colors={story.gradient} style={styles.storyCircle} />
+              <LinearGradient colors={story.gradient} style={styles.storyCircle}>
+                <Image
+                  source={{ uri: story.thumbnail }}
+                  style={styles.storyThumbnail}
+                  resizeMode="cover"
+                />
+              </LinearGradient>
               {index === 0 && !hasViewedTrending && (
                 <View style={styles.redNotificationDot} />
               )}
@@ -718,6 +772,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  storyThumbnail: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
   redNotificationDot: {
     position: 'absolute',
