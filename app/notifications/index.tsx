@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   Image,
   Platform,
-  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ThumbsUp, MessageCircle, GitBranch } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 type NotificationType = 'like' | 'comment' | 'intent_chain' | 'follow' | 'mention';
-type FilterType = 'all' | 'intent_gains' | 'replies';
 
 interface Notification {
   id: string;
@@ -133,21 +131,6 @@ const DUMMY_NOTIFICATIONS: Notification[] = [
 export default function NotificationsScreen() {
   const router = useRouter();
   const { colors, theme } = useTheme();
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
-
-  const filterNotifications = (filter: FilterType): Notification[] => {
-    switch (filter) {
-      case 'intent_gains':
-        return DUMMY_NOTIFICATIONS.filter(n => n.type === 'intent_chain');
-      case 'replies':
-        return DUMMY_NOTIFICATIONS.filter(n => n.type === 'comment');
-      case 'all':
-      default:
-        return DUMMY_NOTIFICATIONS;
-    }
-  };
-
-  const filteredNotifications = filterNotifications(selectedFilter);
 
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
@@ -214,30 +197,6 @@ export default function NotificationsScreen() {
     </TouchableOpacity>
   );
 
-  const renderFilterChip = (label: string, filterType: FilterType) => (
-    <TouchableOpacity
-      key={filterType}
-      style={[
-        styles.filterChip,
-        selectedFilter === filterType
-          ? { backgroundColor: colors.primary, borderColor: colors.primary }
-          : { backgroundColor: colors.surface, borderColor: colors.border },
-      ]}
-      activeOpacity={0.7}
-      onPress={() => setSelectedFilter(filterType)}
-    >
-      <Text
-        style={[
-          styles.filterChipText,
-          selectedFilter === filterType
-            ? { color: theme === 'dark' ? colors.background : '#FFFFFF', fontWeight: '700' }
-            : { color: colors.text, fontWeight: '600' },
-        ]}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -253,19 +212,8 @@ export default function NotificationsScreen() {
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[styles.filterContainer, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}
-        contentContainerStyle={styles.filterContent}
-      >
-        {renderFilterChip('All', 'all')}
-        {renderFilterChip('My Intent Gains', 'intent_gains')}
-        {renderFilterChip('Reply On Post', 'replies')}
-      </ScrollView>
-
       <FlatList
-        data={filteredNotifications}
+        data={DUMMY_NOTIFICATIONS}
         renderItem={renderNotification}
         keyExtractor={(item) => item.id}
         style={styles.notificationsList}
@@ -305,32 +253,6 @@ const styles = StyleSheet.create({
   },
   headerPlaceholder: {
     width: 40,
-  },
-  filterContainer: {
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  filterContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: '#F3F4F6',
-    borderColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1F2937',
-    lineHeight: 16,
   },
   notificationsList: {
     flex: 1,
