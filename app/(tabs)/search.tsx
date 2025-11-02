@@ -210,21 +210,6 @@ export default function SearchPage() {
         style={[styles.content, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
-        {searchQuery ? (
-          <View style={styles.resultsHeader}>
-            <Text style={[styles.resultsTitle, { color: colors.text }]}>
-              Results for "{searchQuery}"
-            </Text>
-            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
-              {filteredContent.length} {filteredContent.length === 1 ? 'result' : 'results'}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.resultsHeader}>
-            <Text style={[styles.resultsTitle, { color: colors.text }]}>Recommended for you</Text>
-          </View>
-        )}
-
         <View style={styles.gridContainer}>
           {filteredContent.map((item, index) => {
             const row = Math.floor(index / GRID_COLUMNS);
@@ -339,22 +324,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  resultsHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 10,
-  },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  resultsCount: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
   },
   gridContainer: {
     flexDirection: 'row',
