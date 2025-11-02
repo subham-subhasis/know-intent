@@ -837,19 +837,19 @@ const styles = StyleSheet.create({
   storiesContent: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    gap: 8,
+    gap: 4,
   },
   storyContainer: {
     alignItems: 'center',
-    width: 64,
+    width: 68,
   },
   storyCircleWrapper: {
     position: 'relative',
   },
   storyCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 0,
+    width: 68,
+    height: 68,
+    borderRadius: 6,
     marginBottom: 6,
     borderWidth: 3,
     borderColor: '#FFFFFF',
@@ -863,9 +863,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   storyThumbnail: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 62,
+    height: 62,
+    borderRadius: 3,
   },
   redNotificationDot: {
     position: 'absolute',
