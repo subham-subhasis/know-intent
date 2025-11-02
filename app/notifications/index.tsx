@@ -310,11 +310,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    height: 10;
   },
   filterContent: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
     gap: 8,
   },
   filterChip: {
@@ -322,9 +321,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    height: 30,
     backgroundColor: '#F3F4F6',
     borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterChipText: {
     fontSize: 13,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   notificationsContent: {
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   notificationCard: {
     flexDirection: 'row',
