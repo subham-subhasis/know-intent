@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
   storyCircle: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 0,
     marginBottom: 6,
     borderWidth: 3,
     borderColor: '#FFFFFF',
