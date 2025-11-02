@@ -500,7 +500,11 @@ export default function HomePage() {
           <Text style={[styles.tagline, { color: colors.textSecondary }]}>Scroll. Learn. Inspire.</Text>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/notifications')}
+          >
             <Bell size={24} color={colors.icon} strokeWidth={2} />
             <View style={styles.notificationDot} />
           </TouchableOpacity>
