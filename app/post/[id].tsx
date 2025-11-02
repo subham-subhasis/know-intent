@@ -431,7 +431,7 @@ export default function PostDetailPage() {
             </Text>
           )}
 
-          <View style={s.stats}>
+          <View style={styles.stats}>
             <Text style={[styles.statText, { color: colors.textSecondary }]}>
               {formatCount(post.views_count)} views
             </Text>
