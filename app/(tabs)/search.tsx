@@ -16,7 +16,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
-const GRID_SPACING = 8;
+const GRID_SPACING = 0.2;
 const GRID_COLUMNS = 3;
 const ITEM_WIDTH = (width - (GRID_COLUMNS + 1) * GRID_SPACING) / GRID_COLUMNS;
 
@@ -359,12 +359,12 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: GRID_SPACING,
+    padding: 0,
   },
   gridItem: {
     width: ITEM_WIDTH,
     height: ITEM_WIDTH,
-    borderRadius: 12,
+    borderRadius: 0,
     overflow: 'hidden',
     backgroundColor: '#F3F4F6',
   },
@@ -380,12 +380,12 @@ const styles = StyleSheet.create({
   },
   gridOverlay: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    bottom: 4,
+    right: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
   },
   gridType: {
     fontSize: 12,
