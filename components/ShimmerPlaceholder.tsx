@@ -1,6 +1,50 @@
 import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+interface ShimmerPlaceholderProps {
+  width: number | string;
+  height: number;
+  borderRadius?: number;
+  style?: ViewStyle;
+}
+
+export function ShimmerPlaceholder({ width, height, borderRadius = 4, style }: ShimmerPlaceholderProps) {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shimmerAnim, {
+          toValue: 0,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [shimmerAnim]);
+
+  const opacity = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.7],
+  });
+
+  return (
+    <Animated.View style={[{ width, height, borderRadius, overflow: 'hidden', opacity }, style]}>
+      <LinearGradient
+        colors={['#E5E7EB', '#F3F4F6', '#E5E7EB']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </Animated.View>
+  );
+}
 
 export function ShimmerCard() {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
