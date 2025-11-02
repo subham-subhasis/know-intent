@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,17 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, ThumbsUp, MessageCircle, GitBranch } from 'lucide-react-native';
+import { ChevronLeft, ThumbsUp, MessageCircle, GitBranch, Bell } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { fetchNotifications } from '@/services/notificationService';
+import { NotificationSkeleton } from '@/components/NotificationSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorToast } from '@/components/ErrorToast';
 
 type NotificationType = 'like' | 'comment' | 'intent_chain' | 'follow' | 'mention';
 
@@ -25,6 +32,7 @@ interface Notification {
   isRead: boolean;
 }
 
+/* Moved to service
 const DUMMY_NOTIFICATIONS: Notification[] = [
   {
     id: '1',
@@ -127,10 +135,27 @@ const DUMMY_NOTIFICATIONS: Notification[] = [
     isRead: true,
   },
 ];
+*/
 
 export default function NotificationsScreen() {
   const router = useRouter();
   const { colors, theme } = useTheme();
+  const [showError, setShowError] = useState(false);
+
+  const {
+    data: notifications,
+    isLoading,
+    isError,
+    isRefreshing,
+    isFetchingMore,
+    hasMore,
+    loadMore,
+    refresh,
+    retry,
+  } = useInfiniteScroll({
+    queryKey: ['notifications'],
+    fetchFn: fetchNotifications,
+  });
 
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
@@ -155,7 +180,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const renderNotification = ({ item }: { item: Notification }) => (
+  const renderNotification = useCallback(({ item }: { item: Notification }) => (
     <TouchableOpacity
       style={[
         styles.notificationCard,
@@ -195,7 +220,7 @@ export default function NotificationsScreen() {
         <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
       )}
     </TouchableOpacity>
-  );
+  ), [colors, router]);
 
 
   return (
@@ -213,12 +238,57 @@ export default function NotificationsScreen() {
       </View>
 
       <FlatList
-        data={DUMMY_NOTIFICATIONS}
+        data={notifications}
         renderItem={renderNotification}
         keyExtractor={(item) => item.id}
         style={styles.notificationsList}
         contentContainerStyle={styles.notificationsContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        removeClippedSubviews={true}
+        ListEmptyComponent={
+          isLoading ? (
+            <View>
+              <NotificationSkeleton />
+              <NotificationSkeleton />
+              <NotificationSkeleton />
+            </View>
+          ) : (
+            <EmptyState
+              icon={Bell}
+              title="No Notifications"
+              description="You're all caught up!"
+            />
+          )
+        }
+        ListFooterComponent={
+          isFetchingMore && hasMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : null
+        }
+      />
+
+      <ErrorToast
+        visible={showError}
+        message="Failed to load notifications"
+        onRetry={() => {
+          setShowError(false);
+          retry();
+        }}
+        onDismiss={() => setShowError(false)}
       />
     </View>
   );
@@ -316,5 +386,10 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#1F2937',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

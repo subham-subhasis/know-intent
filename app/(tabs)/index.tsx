@@ -10,8 +10,10 @@ import {
   BackHandler,
   Image,
   PanResponder,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
@@ -21,6 +23,12 @@ import { useRouter } from 'expo-router';
 import { Modal } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { fetchFeed } from '@/services/feedService';
+import { PostSkeleton } from '@/components/PostSkeleton';
+import { EmptyState } from '@/components/EmptyState';
+import { ErrorToast } from '@/components/ErrorToast';
+import { FileQuestion } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -253,7 +261,6 @@ const CATEGORY_CONTENT: Record<string, Array<{ id: string; title: string; thumbn
 };
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true);
   const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
@@ -264,10 +271,26 @@ export default function HomePage() {
   const [currentContent, setCurrentContent] = useState(CATEGORY_CONTENT.trending);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [showError, setShowError] = useState(false);
   const router = useRouter();
   const { colors, theme } = useTheme();
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const {
+    data: feedData,
+    isLoading,
+    isError,
+    isRefreshing,
+    isFetchingMore,
+    hasMore,
+    loadMore,
+    refresh,
+    retry,
+  } = useInfiniteScroll({
+    queryKey: ['feed'],
+    fetchFn: fetchFeed,
+  });
 
   const panResponder = useRef(
     PanResponder.create({
@@ -286,12 +309,10 @@ export default function HomePage() {
   ).current;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (isError) {
+      setShowError(true);
+    }
+  }, [isError]);
 
   useEffect(() => {
     const checkViewedStatus = async () => {
@@ -530,8 +551,21 @@ export default function HomePage() {
         style={[styles.feedSection, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.feedContent}
-        data={loading ? [1, 2, 3] : VIDEO_CARDS}
-        keyExtractor={(item) => loading ? `shimmer-${item}` : item.id}
+        data={feedData}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        removeClippedSubviews={true}
         ListHeaderComponent={
           <ScrollView
             style={[styles.storiesSection, { backgroundColor: colors.background }]}
@@ -565,11 +599,29 @@ export default function HomePage() {
           ))}
           </ScrollView>
         }
-        renderItem={({ item: video, index }) => {
-          if (loading) {
-            return <ShimmerCard />;
-          }
-
+        ListEmptyComponent={
+          isLoading ? (
+            <View>
+              <PostSkeleton />
+              <PostSkeleton />
+              <PostSkeleton />
+            </View>
+          ) : (
+            <EmptyState
+              icon={FileQuestion}
+              title="No Posts Yet"
+              description="Check back later for new content"
+            />
+          )
+        }
+        ListFooterComponent={
+          isFetchingMore && hasMore ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : null
+        }
+        renderItem={useCallback(({ item: video, index }) => {
           return (
             <View>
               <TouchableOpacity
@@ -664,7 +716,17 @@ export default function HomePage() {
               {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
           );
+        }, [feedData, likedVideos, dislikedVideos, expandedVideoId, colors, theme, router])}
+      />
+
+      <ErrorToast
+        visible={showError}
+        message="Failed to load feed"
+        onRetry={() => {
+          setShowError(false);
+          retry();
         }}
+        onDismiss={() => setShowError(false)}
       />
 
       <Modal
@@ -1205,5 +1267,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
