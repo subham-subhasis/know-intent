@@ -832,16 +832,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    maxHeight: 90,
+    maxHeight: 110,
   },
   storiesContent: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     gap: 4,
   },
   storyContainer: {
     alignItems: 'center',
     width: 68,
+    marginBottom: 4,
   },
   storyCircleWrapper: {
     position: 'relative',
@@ -883,6 +884,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#4B5563',
     textAlign: 'center',
+    width: '100%',
   },
   feedSection: {
     flex: 1,
