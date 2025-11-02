@@ -633,7 +633,7 @@ export default function HomePage() {
                   </View>
                 </View>
 
-                <View style={styles.videoInfo}>
+                <View style={[styles.videoInfo, { borderTopColor: colors.borderLight }]}>
                   <View style={styles.titleRow}>
                     <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={2}>
                       {video.title}
@@ -994,6 +994,8 @@ const styles = StyleSheet.create({
   },
   videoInfo: {
     padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
   },
   titleRow: {
     flexDirection: 'row',
