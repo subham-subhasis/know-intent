@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-    //borderWidth: 1,
-    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    //backgroundColor: '#F3F4F6',
     borderColor: '#E5E7EB',
   },
   filterChipText: {
