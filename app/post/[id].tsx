@@ -209,11 +209,11 @@ const DUMMY_POSTS: Record<string, Post> = {
       },
     ],
   },
-  //c1: ALL_CHILD_POSTS_DATA[0],
-  //c2: ALL_CHILD_POSTS_DATA[1],
-  //c3: ALL_CHILD_POSTS_DATA[2],
-  //c4: ALL_CHILD_POSTS_DATA[3],
-  //c5: ALL_CHILD_POSTS_DATA[4],
+  c1: ALL_CHILD_POSTS_DATA[0],
+  c2: ALL_CHILD_POSTS_DATA[1],
+  c3: ALL_CHILD_POSTS_DATA[2],
+  c4: ALL_CHILD_POSTS_DATA[3],
+  c5: ALL_CHILD_POSTS_DATA[4],
 };
 
 
