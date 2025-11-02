@@ -518,12 +518,19 @@ export default function HomePage() {
         </View>
       </View>
 
-      <ScrollView
-        style={[styles.storiesSection, { backgroundColor: colors.background }]}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.storiesContent}
-      >
+      <FlatList
+        style={[styles.feedSection, { backgroundColor: colors.background }]}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.feedContent}
+        data={loading ? [1, 2, 3] : VIDEO_CARDS}
+        keyExtractor={(item) => loading ? `shimmer-${item}` : item.id}
+        ListHeaderComponent={
+          <ScrollView
+            style={[styles.storiesSection, { backgroundColor: colors.background }]}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesContent}
+          >
         {STORY_DATA.map((story, index) => (
           <TouchableOpacity
             key={story.id}
@@ -547,15 +554,9 @@ export default function HomePage() {
               {story.name}
             </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <FlatList
-        style={[styles.feedSection, { backgroundColor: colors.background }]}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.feedContent}
-        data={loading ? [1, 2, 3] : VIDEO_CARDS}
-        keyExtractor={(item) => loading ? `shimmer-${item}` : item.id}
+          ))}
+          </ScrollView>
+        }
         renderItem={({ item: video, index }) => {
           if (loading) {
             return <ShimmerCard />;
@@ -832,7 +833,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    maxHeight: 110,
   },
   storiesContent: {
     paddingHorizontal: 12,
