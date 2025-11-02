@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   filterContent: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    gap: 8,
+    //gap: 8,
   },
   filterChip: {
     paddingHorizontal: 12,
