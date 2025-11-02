@@ -504,7 +504,11 @@ export default function HomePage() {
             <Bell size={24} color={colors.icon} strokeWidth={2} />
             <View style={styles.notificationDot} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            activeOpacity={0.7}
+            onPress={() => router.push('/messages')}
+          >
             <MessageCircle size={24} color={colors.icon} strokeWidth={2} />
             <View style={styles.chatDot} />
           </TouchableOpacity>
