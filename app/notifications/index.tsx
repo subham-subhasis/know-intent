@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    height: 40;
+    height: 30;
   },
   filterContent: {
     paddingHorizontal: 16,
