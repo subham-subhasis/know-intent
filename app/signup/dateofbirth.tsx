@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { signupStorage } from '@/lib/signupStorage';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -39,6 +40,8 @@ export default function DateOfBirthPage() {
 
   const handleNext = () => {
     setError('');
+    const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    signupStorage.setData('dateOfBirth', formattedDate);
     router.push('/signup/kpiselection');
   };
 

@@ -11,15 +11,17 @@ import {
   Keyboard,
   ScrollView,
   ImageBackground,
-  Image
+  ActivityIndicator,
 } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useTheme } from '@/contexts/ThemeContext';
+import { signin } from '@/src/api/userService';
 
 export default function LandingPage() {
   const [identifier, setIdentifier] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleOpenTerms = () => {
@@ -32,6 +34,32 @@ export default function LandingPage() {
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  const handleLogin = async () => {
+    if (!identifier || !agreedToTerms) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await signin({
+        identifier: identifier,
+        otp_verified: true,
+        device_info: Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web',
+        location_info: 'Unknown',
+      });
+
+      if (result.ok) {
+        router.replace('/(tabs)');
+      } else {
+        setError('Login failed. Please check your credentials.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,16 +118,26 @@ export default function LandingPage() {
                   </Text>
                 </View>
 
+                {error ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                ) : null}
+
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (!identifier || !agreedToTerms) && styles.buttonDisabled
+                    (loading || !identifier || !agreedToTerms) && styles.buttonDisabled
                   ]}
-                  disabled={!identifier || !agreedToTerms}
-                  onPress={() => router.replace('/(tabs)')}
+                  disabled={loading || !identifier || !agreedToTerms}
+                  onPress={handleLogin}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.buttonText}>Login To Intent</Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.buttonText}>Login To Intent</Text>
+                  )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -278,6 +316,14 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     lineHeight: 16,
     fontWeight: '500',
+  },
+  errorContainer: {
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#EF4444',
+    textAlign: 'center',
   },
   secondaryButton: {
     backgroundColor: 'transparent',

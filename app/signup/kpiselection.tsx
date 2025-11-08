@@ -18,7 +18,8 @@ import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import kpiData from '@/assets/json/kpi.json';
 import { signupStorage } from '@/lib/signupStorage';
-import { authService } from '@/lib/auth';
+import { signup } from '@/src/api/userService';
+import { hashPassword } from '@/lib/passwordUtils';
 
 export default function KPISelectionPage() {
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
@@ -60,35 +61,26 @@ export default function KPISelectionPage() {
 
     try {
       const signupData = signupStorage.getData();
+      signupStorage.setData('kpis', selectedKPIs);
+      signupStorage.setData('suggestions', suggestions);
 
-      const result = await authService.signUp({
-        username: signupData.emailOrPhone,
-        password: signupData.password,
-        email: signupData.isEmail ? signupData.emailOrPhone : undefined,
-        phone: signupData.isEmail ? undefined : signupData.emailOrPhone,
+      const interests = selectedKPIs.length > 0 ? selectedKPIs : [suggestions.trim()];
+
+      const result = await signup({
+        email: signupData.emailOrPhone,
+        password_hash: hashPassword(signupData.password),
+        date_of_birth: signupData.dateOfBirth || new Date().toISOString().split('T')[0],
+        interests: interests,
       });
 
-      if (result.success) {
-        const authResult = await authService.initiateAuth({
-          username: signupData.emailOrPhone,
-        });
-
-        if (authResult.success) {
-          router.push({
-            pathname: '/signup/verifyotp',
-            params: {
-              username: signupData.emailOrPhone,
-              identifier: signupData.emailOrPhone,
-            },
-          });
-        } else {
-          setError(authResult.error || 'Failed to send OTP');
-        }
+      if (result.ok) {
+        signupStorage.clear();
+        router.replace('/(tabs)');
       } else {
-        setError(result.error || 'Sign up failed');
+        setError('Sign up failed. Please try again.');
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred during sign up');
+      setError(err.message || 'An error occurred during sign up. Please try again.');
     } finally {
       setLoading(false);
     }

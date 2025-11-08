@@ -2,7 +2,7 @@ interface SignupData {
   emailOrPhone: string;
   isEmail: boolean;
   password: string;
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
   kpis?: string[];
   suggestions?: string;
   countryCode?: string;
