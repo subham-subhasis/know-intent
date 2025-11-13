@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut } from 'lucide-react-native';
+import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
@@ -270,6 +270,49 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   </View>
                 </TouchableOpacity>
 
+                <View style={styles.greetingSection}>
+                  {isEditingUID ? (
+                    <View style={styles.greetingEditContainer}>
+                      <TextInput
+                        style={[
+                          styles.greetingInput,
+                          {
+                            color: colors.text,
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                          }
+                        ]}
+                        value={newUID}
+                        onChangeText={setNewUID}
+                        autoFocus
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      <TouchableOpacity
+                        style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+                        onPress={handleSaveUID}
+                        disabled={updating}
+                        activeOpacity={0.7}
+                      >
+                        {updating ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.greetingRow}>
+                      <Text style={[styles.greetingText, { color: colors.text }]}>
+                        Namaste <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
+                      </Text>
+                      <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
+                        <Edit2 size={16} color={colors.icon} strokeWidth={2} />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
                 <View style={styles.earningsRow}>
                   <View style={[styles.earningBox, { backgroundColor: colors.surface }]}>
                     <DollarSign size={16} color="#10B981" strokeWidth={2.5} />
@@ -286,52 +329,6 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
 
                 <View style={styles.infoSection}>
                   <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>User Name:</Text>
-                    <View style={styles.infoValueContainer}>
-                      {isEditingUID ? (
-                        <>
-                          <TextInput
-                            style={[
-                              styles.usernameInput,
-                              {
-                                color: colors.text,
-                                backgroundColor: colors.surface,
-                                borderColor: colors.border,
-                              }
-                            ]}
-                            value={newUID}
-                            onChangeText={setNewUID}
-                            autoFocus
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                          />
-                          <TouchableOpacity
-                            style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-                            onPress={handleSaveUID}
-                            disabled={updating}
-                            activeOpacity={0.7}
-                          >
-                            {updating ? (
-                              <ActivityIndicator size="small" color="#FFFFFF" />
-                            ) : (
-                              <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
-                            )}
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <>
-                          <Text style={[styles.infoValue, { color: colors.text }]}>
-                            {user?.uid || 'User'}
-                          </Text>
-                          <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
-                            <Text style={styles.editLink}>edit</Text>
-                          </TouchableOpacity>
-                        </>
-                      )}
-                    </View>
-                  </View>
-
-                  <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
                     <Text style={[styles.infoValue, { color: colors.text }]}>{user?.identifier || 'N/A'}</Text>
                   </View>
@@ -347,17 +344,31 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   </View>
                 </View>
 
-                <View style={styles.bottomSection}>
+                <View style={[styles.separator, { backgroundColor: colors.border }]} />
+
+                <View style={styles.menuSection}>
                   <TouchableOpacity
-                    style={[styles.settingsTile, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    style={[styles.menuItem, { backgroundColor: colors.surface, borderBottomColor: colors.borderLight }]}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.menuItemLeft}>
+                      <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
+                        <Clock size={20} color={colors.icon} strokeWidth={2} />
+                      </View>
+                      <Text style={[styles.menuItemText, { color: colors.text }]}>History</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.menuItem, { backgroundColor: colors.surface }]}
                     onPress={() => setShowSettings(true)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.settingsTileLeft}>
-                      <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                    <View style={styles.menuItemLeft}>
+                      <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
                         <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
                       </View>
-                      <Text style={[styles.settingsTileText, { color: colors.text }]}>Settings</Text>
+                      <Text style={[styles.menuItemText, { color: colors.text }]}>Settings</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -376,7 +387,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
 
               <View style={[styles.themeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={styles.themeToggleLeft}>
-                  <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                  <View style={[styles.menuIconContainer, { backgroundColor: colors.background }]}>
                     {theme === 'dark' ? (
                       <Moon size={20} color={colors.icon} strokeWidth={2} />
                     ) : (
@@ -556,6 +567,45 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
+  greetingSection: {
+    width: '100%',
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  greetingText: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#1F2937',
+  },
+  greetingName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  greetingEditContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+  },
+  greetingInput: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    textAlign: 'center',
+  },
   earningsRow: {
     flexDirection: 'row',
     gap: 8,
@@ -611,18 +661,6 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     textDecorationLine: 'underline',
   },
-  usernameInput: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    backgroundColor: '#F9FAFB',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
   actionButton: {
     width: 36,
     height: 36,
@@ -631,37 +669,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  settingsTile: {
+  separator: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 24,
+  },
+  menuSection: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  settingsTileLeft: {
+  menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  menuIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  settingsTileText: {
-    fontSize: 15,
+  menuItemText: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
   },
@@ -702,11 +748,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
-  },
-  bottomSection: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-    paddingBottom: 32,
   },
   confirmOverlay: {
     position: 'absolute',
