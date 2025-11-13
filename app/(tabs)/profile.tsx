@@ -6,6 +6,7 @@ import {
   Platform,
   TouchableOpacity,
   Modal,
+  Image,
 } from 'react-native';
 import { Grid3x3, Network, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import GridView from '@/components/GridView';
 import SpiderWebView from '@/components/SpiderWebView';
 import { UploadModal } from '@/components/UploadModal';
+import { sessionStorage } from '@/lib/sessionStorage';
 
 type ViewMode = 'grid' | 'spider';
 
@@ -170,15 +172,16 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     getCurrentUser();
   }, []);
 
   const getCurrentUser = async () => {
-    // TODO: Replace with Cognito user fetch
-    const user: { id?: string } | null = null;
-    setUserId(user?.id ?? null);
+    const userData = await sessionStorage.getUser();
+    setUser(userData);
+    setUserId(userData?.uid ?? null);
   };
 
   const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
@@ -268,11 +271,18 @@ export default function ProfilePage() {
         <View style={styles.headerContent}>
           <View style={styles.leftSection}>
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                S
-              </Text>
+              {user?.profile_image_url ? (
+                <Image
+                  source={{ uri: user.profile_image_url }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+                  {user?.identifier?.charAt(0).toUpperCase() || 'U'}
+                </Text>
+              )}
             </View>
-            <Text style={[styles.userName, { color: colors.text }]}>Subham</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{user?.identifier || 'User'}</Text>
           </View>
 
           <View style={styles.statsRow}>
@@ -411,6 +421,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   userName: {
     fontSize: 18,

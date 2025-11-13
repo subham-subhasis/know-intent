@@ -13,18 +13,40 @@ import {
   ImageBackground,
   ActivityIndicator,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { signin } from '@/src/api/userService';
 import { ErrorToast } from '@/components/ErrorToast';
 import { Info } from 'lucide-react-native';
+import { sessionStorage } from '@/lib/sessionStorage';
 
 export default function LandingPage() {
   const [identifier, setIdentifier] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    checkExistingSession();
+  }, []);
+
+  const checkExistingSession = async () => {
+    try {
+      const isValid = await sessionStorage.isSessionValid();
+      if (isValid) {
+        const session = await sessionStorage.getSession();
+        if (session) {
+          router.replace('/(tabs)');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Session check failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenTerms = () => {
     Linking.openURL('https://intent.app/terms');
@@ -54,6 +76,18 @@ export default function LandingPage() {
       });
 
       if (result.ok) {
+        await sessionStorage.saveSession({
+          uid: result.uid,
+          session_id: result.session_id,
+          identifier: identifier,
+          timestamp: Date.now(),
+        });
+
+        await sessionStorage.saveUser({
+          uid: result.uid,
+          identifier: identifier,
+        });
+
         router.replace('/(tabs)');
       } else {
         setError('Unable to sign in. Please check your username or phone number.');
@@ -66,6 +100,14 @@ export default function LandingPage() {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#1F2937" />
+      </View>
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -169,6 +211,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backgroundImage: {
     position: 'absolute',
