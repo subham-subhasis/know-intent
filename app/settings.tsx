@@ -6,17 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Image,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
-import { Settings, Bell, Bookmark, Heart, Clock, ChevronLeft, Moon, Sun, Camera } from 'lucide-react-native';
+import { Settings, Bell, Bookmark, Heart, Clock, ChevronLeft, Moon, Sun, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
-import { useState, useEffect } from 'react';
-import { getPresignedUrl, updateProfileImage } from '@/src/api/userService';
-import { ImagePickerModal } from '@/components/ImagePicker';
+import { useState } from 'react';
+import { ProfileSlider } from '@/components/ProfileSlider';
 
 const MENU_ITEMS = [
   { id: '1', icon: Bookmark, label: 'Saved Videos', count: '12' },
@@ -29,95 +25,19 @@ const MENU_ITEMS = [
 export default function SettingsPage() {
   const router = useRouter();
   const { theme, colors, toggleTheme } = useTheme();
-  const [user, setUser] = useState<any>(null);
-  const [uploading, setUploading] = useState(false);
-  const [showImagePicker, setShowImagePicker] = useState(false);
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    const userData = await sessionStorage.getUser();
-    setUser(userData);
-  };
+  const [showProfileSlider, setShowProfileSlider] = useState(false);
 
   const handleLogout = async () => {
     await sessionStorage.clearSession();
     router.replace('/');
   };
 
-  const handleImagePick = () => {
-    setShowImagePicker(true);
-  };
-
-  const handleImageSelected = async (uri: string) => {
-    setShowImagePicker(false);
-    await uploadProfileImage(uri);
-  };
-
-  const uploadProfileImage = async (uri: string) => {
-    if (!user) return;
-
-    setUploading(true);
-    try {
-      const fileName = `avatar_${Date.now()}.jpg`;
-      const presignedData = await getPresignedUrl({
-        uid: user.uid,
-        profile_id: user.profile_id || '1',
-        file_name: fileName,
-        content_type: 'image/jpeg',
-      });
-
-      if (!presignedData.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-
-      let fileBlob;
-      if (uri.startsWith('data:')) {
-        const response = await fetch(uri);
-        fileBlob = await response.blob();
-      } else {
-        const fileResponse = await fetch(uri);
-        fileBlob = await fileResponse.blob();
-      }
-
-      const uploadResponse = await fetch(presignedData.upload_url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'image/jpeg',
-        },
-        body: fileBlob,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const updateResult = await updateProfileImage({
-        uid: user.uid,
-        profile_id: user.profile_id || '1',
-        image_url: presignedData.image_url,
-      });
-
-      if (updateResult.ok) {
-        await sessionStorage.updateUserProfileImage(updateResult.profile_image_url);
-        await loadUser();
-      }
-    } catch (error: any) {
-      Alert.alert('Upload Failed', error.message || 'Unable to upload profile picture');
-    } finally {
-      setUploading(false);
-    }
+  const handleAccountPress = () => {
+    setShowProfileSlider(true);
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ImagePickerModal
-        visible={showImagePicker}
-        onImageSelected={handleImageSelected}
-        onCancel={() => setShowImagePicker(false)}
-      />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}
@@ -127,8 +47,8 @@ export default function SettingsPage() {
           <ChevronLeft size={28} color={colors.icon} strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={[styles.appName, { color: colors.text }]}>Account</Text>
-          <Text style={[styles.tagline, { color: colors.textSecondary }]}>Manage your account</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>Settings</Text>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>Manage your preferences</Text>
         </View>
       </View>
 
@@ -137,38 +57,20 @@ export default function SettingsPage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        <View style={[styles.profileSection, { borderBottomColor: colors.borderLight }]}>
-          <View style={styles.avatarContainer}>
-            <View style={[styles.avatar, { backgroundColor: colors.primary, borderColor: colors.background }]}>
-              {user?.profile_image_url ? (
-                <Image
-                  source={{ uri: user.profile_image_url }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : colors.background }]}>
-                  {user?.identifier?.charAt(0).toUpperCase() || 'U'}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity
-              style={[styles.cameraButton, { backgroundColor: colors.primary }]}
-              onPress={handleImagePick}
-              disabled={uploading}
-              activeOpacity={0.7}
-            >
-              {uploading ? (
-                <ActivityIndicator size="small" color={colors.background} />
-              ) : (
-                <Camera size={18} color={colors.background} strokeWidth={2} />
-              )}
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.userName, { color: colors.text }]}>{user?.identifier || 'User'}</Text>
-          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email || user?.phone_number || 'No contact info'}</Text>
-        </View>
-
         <View style={styles.menuSection}>
+          <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={handleAccountPress}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuItemLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                <User size={22} color={colors.icon} strokeWidth={2} />
+              </View>
+              <Text style={[styles.menuItemLabel, { color: colors.text }]}>Account</Text>
+            </View>
+          </TouchableOpacity>
+
           <View style={[styles.menuItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.menuItemLeft}>
               <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
@@ -216,6 +118,11 @@ export default function SettingsPage() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <ProfileSlider
+        visible={showProfileSlider}
+        onClose={() => setShowProfileSlider(false)}
+      />
     </View>
   );
 }
@@ -260,70 +167,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 40,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#1F2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  avatarImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1F2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
   },
   menuSection: {
     paddingVertical: 16,
