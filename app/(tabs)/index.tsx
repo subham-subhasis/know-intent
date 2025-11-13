@@ -29,6 +29,7 @@ import { PostSkeleton } from '@/components/PostSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorToast } from '@/components/ErrorToast';
 import { FileQuestion } from 'lucide-react-native';
+import { ProfileSlider } from '@/components/ProfileSlider';
 
 const { width, height } = Dimensions.get('window');
 
@@ -272,6 +273,7 @@ export default function HomePage() {
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [showProfileSlider, setShowProfileSlider] = useState(false);
   const router = useRouter();
   const { colors, theme } = useTheme();
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
@@ -540,7 +542,7 @@ export default function HomePage() {
           <TouchableOpacity
             style={[styles.profileButton, { backgroundColor: colors.primary }]}
             activeOpacity={0.7}
-            onPress={() => router.push('/settings')}
+            onPress={() => setShowProfileSlider(true)}
           >
             <User size={20} color={theme === 'dark' ? colors.background : colors.background} strokeWidth={2.5} />
           </TouchableOpacity>
@@ -824,6 +826,11 @@ export default function HomePage() {
           </View>
         </View>
       </Modal>
+
+      <ProfileSlider
+        visible={showProfileSlider}
+        onClose={() => setShowProfileSlider(false)}
+      />
     </View>
   );
 }

@@ -10,9 +10,10 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Switch,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check } from 'lucide-react-native';
+import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
@@ -24,14 +25,18 @@ interface ProfileSliderProps {
   onClose: () => void;
 }
 
+const USER_EMAIL = 'user@example.com';
+const USER_PHONE = '-';
+
 export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
-  const { colors, theme } = useTheme();
+  const { colors, theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
   useEffect(() => {
@@ -213,97 +218,157 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
           </View>
 
           <View style={styles.content}>
-            <View style={styles.profileSection}>
-              <TouchableOpacity
-                style={styles.avatarContainer}
-                onPress={handleProfilePicturePress}
-                disabled={uploading}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-                  {user?.profile_image_url ? (
-                    <Image
-                      source={{ uri: user.profile_image_url }}
-                      style={styles.avatarImage}
-                    />
-                  ) : (
-                    <Text style={[styles.avatarText, { color: colors.background }]}>
-                      {user?.identifier?.charAt(0).toUpperCase() || 'U'}
-                    </Text>
-                  )}
-                </View>
-                <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
-                  {uploading ? (
-                    <ActivityIndicator size="small" color={colors.background} />
-                  ) : (
-                    <Camera size={20} color={colors.background} strokeWidth={2} />
-                  )}
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.earningsRow}>
-                <View style={[styles.earningBox, { backgroundColor: colors.surface }]}>
-                  <DollarSign size={20} color="#10B981" strokeWidth={2.5} />
-                  <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
-                  <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Earned</Text>
-                </View>
-
-                <View style={[styles.earningBox, { backgroundColor: colors.surface }]}>
-                  <Coins size={20} color="#F59E0B" strokeWidth={2.5} />
-                  <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
-                  <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Intent Coins</Text>
-                </View>
-              </View>
-
-              <View style={styles.usernameSection}>
-                <Text style={[styles.uidLabel, { color: colors.textSecondary }]}>Username</Text>
-                <View style={styles.usernameRow}>
-                  {isEditing ? (
-                    <>
-                      <TextInput
-                        style={[
-                          styles.usernameInput,
-                          {
-                            color: colors.text,
-                            backgroundColor: colors.surface,
-                            borderColor: colors.border,
-                          }
-                        ]}
-                        value={newUsername}
-                        onChangeText={setNewUsername}
-                        autoFocus
-                        autoCapitalize="none"
-                        autoCorrect={false}
+            {!showSettings ? (
+              <View style={styles.profileSection}>
+                <TouchableOpacity
+                  style={styles.avatarContainer}
+                  onPress={handleProfilePicturePress}
+                  disabled={uploading}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+                    {user?.profile_image_url ? (
+                      <Image
+                        source={{ uri: user.profile_image_url }}
+                        style={styles.avatarImage}
                       />
-                      <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-                        onPress={handleSaveUsername}
-                        disabled={updating}
-                        activeOpacity={0.7}
-                      >
-                        {updating ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
-                        )}
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={[styles.usernameText, { color: colors.text }]}>
-                        {user?.identifier || 'User'}
+                    ) : (
+                      <Text style={[styles.avatarText, { color: colors.background }]}>
+                        {user?.identifier?.charAt(0).toUpperCase() || 'U'}
                       </Text>
-                      <TouchableOpacity onPress={handleEditUsername} activeOpacity={0.7}>
+                    )}
+                  </View>
+                  <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
+                    {uploading ? (
+                      <ActivityIndicator size="small" color={colors.background} />
+                    ) : (
+                      <Camera size={16} color={colors.background} strokeWidth={2} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+
+                <View style={styles.earningsRow}>
+                  <View style={[styles.earningBox, { backgroundColor: colors.surface }]}>
+                    <DollarSign size={16} color="#10B981" strokeWidth={2.5} />
+                    <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
+                    <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Earned</Text>
+                  </View>
+
+                  <View style={[styles.earningBox, { backgroundColor: colors.surface }]}>
+                    <Coins size={16} color="#F59E0B" strokeWidth={2.5} />
+                    <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
+                    <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Intent Coins</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoSection}>
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>User Name:</Text>
+                    <View style={styles.infoValueContainer}>
+                      {isEditing ? (
+                        <>
+                          <TextInput
+                            style={[
+                              styles.usernameInput,
+                              {
+                                color: colors.text,
+                                backgroundColor: colors.surface,
+                                borderColor: colors.border,
+                              }
+                            ]}
+                            value={newUsername}
+                            onChangeText={setNewUsername}
+                            autoFocus
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                          />
+                          <TouchableOpacity
+                            style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+                            onPress={handleSaveUsername}
+                            disabled={updating}
+                            activeOpacity={0.7}
+                          >
+                            {updating ? (
+                              <ActivityIndicator size="small" color="#FFFFFF" />
+                            ) : (
+                              <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
+                            )}
+                          </TouchableOpacity>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={[styles.infoValue, { color: colors.text }]}>
+                            {user?.identifier || 'User'}
+                          </Text>
+                          <TouchableOpacity onPress={handleEditUsername} activeOpacity={0.7}>
+                            <Text style={styles.editLink}>edit</Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                    </View>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{USER_EMAIL}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Phone Number:</Text>
+                    <View style={styles.infoValueContainer}>
+                      <Text style={[styles.infoValue, { color: colors.text }]}>{USER_PHONE}</Text>
+                      <TouchableOpacity activeOpacity={0.7}>
                         <Text style={styles.editLink}>edit</Text>
                       </TouchableOpacity>
-                    </>
-                  )}
+                    </View>
+                  </View>
                 </View>
-                <Text style={[styles.uidText, { color: colors.textSecondary }]}>
-                  UID: {user?.uid || 'N/A'}
-                </Text>
+
+                <TouchableOpacity
+                  style={[styles.settingsTile, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => setShowSettings(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingsTileLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                      <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
+                    </View>
+                    <Text style={[styles.settingsTileText, { color: colors.text }]}>Settings</Text>
+                  </View>
+                </TouchableOpacity>
               </View>
-            </View>
+            ) : (
+              <View style={styles.settingsPage}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setShowSettings(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.backText, { color: colors.primary }]}>{'\u2190'} Back</Text>
+                </TouchableOpacity>
+
+                <Text style={[styles.settingsTitle, { color: colors.text }]}>Settings</Text>
+
+                <View style={[styles.themeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.themeToggleLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                      {theme === 'dark' ? (
+                        <Moon size={20} color={colors.icon} strokeWidth={2} />
+                      ) : (
+                        <Sun size={20} color={colors.icon} strokeWidth={2} />
+                      )}
+                    </View>
+                    <Text style={[styles.themeToggleText, { color: colors.text }]}>Dark Theme</Text>
+                  </View>
+                  <Switch
+                    value={theme === 'dark'}
+                    onValueChange={toggleTheme}
+                    trackColor={{ false: colors.border, true: colors.primary }}
+                    thumbColor={colors.background}
+                  />
+                </View>
+              </View>
+            )}
           </View>
 
           {showImagePicker && (
@@ -394,16 +459,16 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -412,26 +477,26 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   avatarImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   avatarText: {
-    fontSize: 48,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   cameraOverlay: {
     position: 'absolute',
-    bottom: 4,
-    right: 4,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -441,49 +506,50 @@ const styles = StyleSheet.create({
   },
   earningsRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 32,
+    gap: 8,
+    marginBottom: 24,
     width: '100%',
   },
   earningBox: {
     flex: 1,
     backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 12,
+    padding: 12,
     alignItems: 'center',
   },
   earningValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
-    marginTop: 8,
+    marginTop: 6,
   },
   earningLabel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 2,
   },
-  usernameSection: {
+  infoSection: {
+    width: '100%',
+    gap: 16,
+  },
+  infoRow: {
     width: '100%',
   },
-  uidLabel: {
+  infoLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6B7280',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    marginBottom: 6,
   },
-  usernameRow: {
+  infoValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 8,
   },
-  usernameText: {
-    fontSize: 20,
-    fontWeight: '700',
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1F2937',
     flex: 1,
   },
@@ -495,7 +561,7 @@ const styles = StyleSheet.create({
   },
   usernameInput: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
@@ -506,17 +572,84 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  uidText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#9CA3AF',
+  settingsTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginTop: 24,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    position: 'absolute',
+    bottom: 20,
+    left: 24,
+    right: 24,
+  },
+  settingsTileLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingsTileText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  settingsPage: {
+    padding: 24,
+  },
+  backButton: {
+    marginBottom: 16,
+  },
+  backText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  settingsTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 24,
+  },
+  themeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  themeToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeToggleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
   },
   imagePickerOverlay: {
     position: 'absolute',
