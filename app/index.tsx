@@ -16,12 +16,14 @@ import {
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { signin } from '@/src/api/userService';
+import { ErrorToast } from '@/components/ErrorToast';
+import { Info } from 'lucide-react-native';
 
 export default function LandingPage() {
   const [identifier, setIdentifier] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
   const router = useRouter();
 
   const handleOpenTerms = () => {
@@ -37,10 +39,11 @@ export default function LandingPage() {
   };
 
   const handleLogin = async () => {
-    if (!identifier || !agreedToTerms) return;
+    if (!identifier) return;
 
     setLoading(true);
     setError('');
+    setShowError(false);
 
     try {
       const result = await signin({
@@ -53,10 +56,12 @@ export default function LandingPage() {
       if (result.ok) {
         router.replace('/(tabs)');
       } else {
-        setError('Login failed. Please check your credentials.');
+        setError('Unable to sign in. Please check your username or phone number.');
+        setShowError(true);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred during login. Please try again.');
+      setError('Something went wrong. Please try again.');
+      setShowError(true);
     } finally {
       setLoading(false);
     }
@@ -65,6 +70,11 @@ export default function LandingPage() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
+        <ErrorToast
+          message={error}
+          visible={showError}
+          onDismiss={() => setShowError(false)}
+        />
         <ImageBackground
           source={require('@/assets/images/intent-bg.png')}
           style={styles.backgroundImage}
@@ -96,7 +106,7 @@ export default function LandingPage() {
                   <Text style={styles.inputLabel}>USERNAME OR PHONE NUMBER</Text>
                   <TextInput
                     style={styles.identifierInput}
-                    placeholder=""
+                    placeholder="Type details here"
                     placeholderTextColor="#D1D5DB"
                     value={identifier}
                     onChangeText={setIdentifier}
@@ -106,30 +116,19 @@ export default function LandingPage() {
                   />
                 </View>
 
-                <View style={styles.checkboxContainer}>
-                  <TouchableOpacity
-                    style={styles.checkbox}
-                    onPress={() => setAgreedToTerms(!agreedToTerms)}
-                  >
-                    <View style={[styles.checkboxBox, agreedToTerms && styles.checkboxChecked]} />
-                  </TouchableOpacity>
-                  <Text style={styles.checkboxText}>
-                    Login as <Text style={styles.usernameText}>{identifier || 'Username'}</Text> profile, You can still switch your profile later.
+                <View style={styles.infoContainer}>
+                  <Info size={16} color="#6B7280" strokeWidth={2} />
+                  <Text style={styles.infoText}>
+                    Namaste <Text style={styles.usernameText}>{identifier || 'Username'}</Text>! Post successful login you can still switch to your preferred profile.
                   </Text>
                 </View>
-
-                {error ? (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                  </View>
-                ) : null}
 
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (loading || !identifier || !agreedToTerms) && styles.buttonDisabled
+                    (loading || !identifier) && styles.buttonDisabled
                   ]}
-                  disabled={loading || !identifier || !agreedToTerms}
+                  disabled={loading || !identifier}
                   onPress={handleLogin}
                   activeOpacity={0.8}
                 >
@@ -241,43 +240,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   identifierInput: {
-    fontSize: 32,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     paddingVertical: 12,
     borderBottomWidth: 2,
     borderBottomColor: '#E5E7EB',
   },
-  checkboxContainer: {
+  infoContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 10,
+    padding: 12,
     marginBottom: 24,
-    paddingHorizontal: 4,
   },
-  checkbox: {
-    marginRight: 12,
-    marginTop: 2,
-  },
-  checkboxBox: {
-    width: 22,
-    height: 22,
-    borderRadius: 3,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#FFFFFF',
-  },
-  checkboxChecked: {
-    backgroundColor: '#1F2937',
-    borderColor: '#1F2937',
-  },
-  checkboxText: {
+  infoText: {
     flex: 1,
     fontSize: 13,
     color: '#4B5563',
-    lineHeight: 20,
+    lineHeight: 18,
     fontWeight: '400',
+    marginLeft: 8,
   },
   usernameText: {
     fontWeight: '600',
@@ -316,14 +302,6 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     lineHeight: 16,
     fontWeight: '500',
-  },
-  errorContainer: {
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#EF4444',
-    textAlign: 'center',
   },
   secondaryButton: {
     backgroundColor: 'transparent',
