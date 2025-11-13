@@ -13,10 +13,11 @@ import {
   Switch,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun } from 'lucide-react-native';
+import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
+import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -25,18 +26,19 @@ interface ProfileSliderProps {
   onClose: () => void;
 }
 
-const USER_EMAIL = 'user@example.com';
 const USER_PHONE = '-';
 
 export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
+  const router = useRouter();
   const { colors, theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
+  const [isEditingUID, setIsEditingUID] = useState(false);
+  const [newUID, setNewUID] = useState('');
   const [uploading, setUploading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const loadUser = async () => {
     const userData = await sessionStorage.getUser();
     setUser(userData);
-    setNewUsername(userData?.identifier || '');
+    setNewUID(userData?.uid || '');
   };
 
   const handleClose = () => {
@@ -73,13 +75,13 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     });
   };
 
-  const handleEditUsername = () => {
-    setIsEditing(true);
+  const handleEditUID = () => {
+    setIsEditingUID(true);
   };
 
-  const handleSaveUsername = async () => {
-    if (!user || !newUsername.trim() || newUsername === user.identifier) {
-      setIsEditing(false);
+  const handleSaveUID = async () => {
+    if (!user || !newUID.trim() || newUID === user.uid) {
+      setIsEditingUID(false);
       return;
     }
 
@@ -87,22 +89,37 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     try {
       const result = await updateUsername({
         current_uid: user.uid,
-        new_username: newUsername.trim(),
+        new_username: newUID.trim(),
       });
 
       if (result.ok) {
-        const updatedUser = { ...user, identifier: newUsername.trim(), uid: result.uid };
+        const updatedUser = { ...user, uid: result.uid };
         await sessionStorage.saveUser(updatedUser);
         await loadUser();
-        setIsEditing(false);
+        setIsEditingUID(false);
       } else {
-        Alert.alert('Update Failed', 'Unable to update username. Please try again.');
+        Alert.alert('Update Failed', 'Unable to update User Name. Please try again.');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update username');
+      Alert.alert('Error', error.message || 'Failed to update User Name');
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleLogoutPress = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    await sessionStorage.clearSession();
+    setShowLogoutConfirm(false);
+    onClose();
+    router.replace('/');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   const handleProfilePicturePress = () => {
@@ -214,7 +231,13 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
               <X size={24} color={colors.icon} strokeWidth={2} />
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Account</Text>
-            <View style={styles.closeButton} />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleLogoutPress}
+              activeOpacity={0.7}
+            >
+              <LogOut size={22} color="#DC2626" strokeWidth={2} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.content}>
@@ -265,7 +288,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>User Name:</Text>
                     <View style={styles.infoValueContainer}>
-                      {isEditing ? (
+                      {isEditingUID ? (
                         <>
                           <TextInput
                             style={[
@@ -276,15 +299,15 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                                 borderColor: colors.border,
                               }
                             ]}
-                            value={newUsername}
-                            onChangeText={setNewUsername}
+                            value={newUID}
+                            onChangeText={setNewUID}
                             autoFocus
                             autoCapitalize="none"
                             autoCorrect={false}
                           />
                           <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-                            onPress={handleSaveUsername}
+                            onPress={handleSaveUID}
                             disabled={updating}
                             activeOpacity={0.7}
                           >
@@ -298,9 +321,9 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                       ) : (
                         <>
                           <Text style={[styles.infoValue, { color: colors.text }]}>
-                            {user?.identifier || 'User'}
+                            {user?.uid || 'User'}
                           </Text>
-                          <TouchableOpacity onPress={handleEditUsername} activeOpacity={0.7}>
+                          <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
                             <Text style={styles.editLink}>edit</Text>
                           </TouchableOpacity>
                         </>
@@ -310,7 +333,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
 
                   <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{USER_EMAIL}</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{user?.identifier || 'N/A'}</Text>
                   </View>
 
                   <View style={styles.infoRow}>
@@ -324,52 +347,81 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  style={[styles.settingsTile, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => setShowSettings(true)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.settingsTileLeft}>
-                    <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-                      <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
+                <View style={styles.bottomSection}>
+                  <TouchableOpacity
+                    style={[styles.settingsTile, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => setShowSettings(true)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.settingsTileLeft}>
+                      <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                        <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
+                      </View>
+                      <Text style={[styles.settingsTileText, { color: colors.text }]}>Settings</Text>
                     </View>
-                    <Text style={[styles.settingsTileText, { color: colors.text }]}>Settings</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View style={styles.settingsPage}>
-                <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => setShowSettings(false)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.backText, { color: colors.primary }]}>{'\u2190'} Back</Text>
-                </TouchableOpacity>
-
-                <Text style={[styles.settingsTitle, { color: colors.text }]}>Settings</Text>
-
-                <View style={[styles.themeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <View style={styles.themeToggleLeft}>
-                    <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-                      {theme === 'dark' ? (
-                        <Moon size={20} color={colors.icon} strokeWidth={2} />
-                      ) : (
-                        <Sun size={20} color={colors.icon} strokeWidth={2} />
-                      )}
-                    </View>
-                    <Text style={[styles.themeToggleText, { color: colors.text }]}>Dark Theme</Text>
-                  </View>
-                  <Switch
-                    value={theme === 'dark'}
-                    onValueChange={toggleTheme}
-                    trackColor={{ false: colors.border, true: colors.primary }}
-                    thumbColor={colors.background}
-                  />
+                  </TouchableOpacity>
                 </View>
               </View>
-            )}
+            ) : (
+            <View style={styles.settingsPage}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setShowSettings(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.backText, { color: colors.primary }]}>{'\u2190'} Back</Text>
+              </TouchableOpacity>
+
+              <Text style={[styles.settingsTitle, { color: colors.text }]}>Settings</Text>
+
+              <View style={[styles.themeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={styles.themeToggleLeft}>
+                  <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                    {theme === 'dark' ? (
+                      <Moon size={20} color={colors.icon} strokeWidth={2} />
+                    ) : (
+                      <Sun size={20} color={colors.icon} strokeWidth={2} />
+                    )}
+                  </View>
+                  <Text style={[styles.themeToggleText, { color: colors.text }]}>Dark Theme</Text>
+                </View>
+                <Switch
+                  value={theme === 'dark'}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.background}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+
+        {showLogoutConfirm && (
+          <View style={[styles.confirmOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+            <View style={[styles.confirmModal, { backgroundColor: colors.background }]}>
+              <Text style={[styles.confirmTitle, { color: colors.text }]}>Confirm Logout</Text>
+              <Text style={[styles.confirmMessage, { color: colors.textSecondary }]}>
+                Are you sure, want to logout?
+              </Text>
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={handleLogoutCancel}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.cancelButtonText, { color: colors.text }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.confirmButton, styles.logoutButton]}
+                  onPress={handleLogoutConfirm}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.logoutButtonText}>Yes, Logout</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
+        )}
 
           {showImagePicker && (
             <View style={[styles.imagePickerOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
@@ -650,6 +702,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
+  },
+  bottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+    paddingBottom: 32,
+  },
+  confirmOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  confirmModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 320,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  logoutButton: {
+    backgroundColor: '#DC2626',
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   imagePickerOverlay: {
     position: 'absolute',
