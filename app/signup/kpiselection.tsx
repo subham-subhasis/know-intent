@@ -78,8 +78,6 @@ export default function KPISelectionPage() {
         const signinResult = await signin({
           identifier: signupData.emailOrPhone,
           otp_verified: true,
-          device_info: Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web',
-          location_info: 'Unknown',
         });
 
         if (signinResult.ok) {
