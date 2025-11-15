@@ -26,8 +26,6 @@ interface ProfileSliderProps {
   onClose: () => void;
 }
 
-const USER_PHONE = '-';
-const USER_EMAIL = 'Subham470@gmail.com';
 
 export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const router = useRouter();
@@ -339,13 +337,13 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                 <View style={styles.infoSection}>
                   <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>EMAIL</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{USER_EMAIL}</Text>
+                    <Text style={[styles.infoValue, { color: colors.text }]}>{user?.email || '-'}</Text>
                   </View>
 
                   <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>PHONE NUMBER</Text>
                     <View style={styles.infoValueContainer}>
-                      <Text style={[styles.infoValue, { color: colors.text }]}>{USER_PHONE}</Text>
+                      <Text style={[styles.infoValue, { color: colors.text }]}>{user?.phone_number || '-'}</Text>
                       <TouchableOpacity activeOpacity={0.7}>
                         <Edit2 size={14} color={colors.icon} strokeWidth={2} />
                       </TouchableOpacity>

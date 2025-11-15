@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { signin } from '@/src/api/userService';
+import { signin, getUserProfile } from '@/src/api/userService';
 import { ErrorToast } from '@/components/ErrorToast';
 import { Info } from 'lucide-react-native';
 import { sessionStorage } from '@/lib/sessionStorage';
@@ -83,10 +83,30 @@ export default function LandingPage() {
           timestamp: Date.now(),
         });
 
-        await sessionStorage.saveUser({
-          uid: result.uid,
-          identifier: identifier,
-        });
+        try {
+          const profileResult = await getUserProfile({ uid: result.uid });
+          if (profileResult.ok) {
+            await sessionStorage.saveUser({
+              uid: profileResult.uid,
+              identifier: profileResult.identifier,
+              profile_id: profileResult.profile_id,
+              profile_image_url: profileResult.profile_image_url,
+              email: profileResult.email,
+              phone_number: profileResult.phone_number,
+            });
+          } else {
+            await sessionStorage.saveUser({
+              uid: result.uid,
+              identifier: identifier,
+            });
+          }
+        } catch (profileError) {
+          console.error('Failed to fetch user profile:', profileError);
+          await sessionStorage.saveUser({
+            uid: result.uid,
+            identifier: identifier,
+          });
+        }
 
         router.replace('/(tabs)');
       } else {

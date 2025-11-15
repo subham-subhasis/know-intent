@@ -18,8 +18,9 @@ import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import kpiData from '@/assets/json/kpi.json';
 import { signupStorage } from '@/lib/signupStorage';
-import { signup } from '@/src/api/userService';
+import { signup, signin, getUserProfile } from '@/src/api/userService';
 import { hashPassword } from '@/lib/passwordUtils';
+import { sessionStorage } from '@/lib/sessionStorage';
 
 export default function KPISelectionPage() {
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([]);
@@ -74,8 +75,48 @@ export default function KPISelectionPage() {
       });
 
       if (result.ok) {
-        signupStorage.clear();
-        router.replace('/(tabs)');
+        const signinResult = await signin({
+          identifier: signupData.emailOrPhone,
+          otp_verified: true,
+          device_info: Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web',
+          location_info: 'Unknown',
+        });
+
+        if (signinResult.ok) {
+          await sessionStorage.saveSession({
+            uid: signinResult.uid,
+            session_id: signinResult.session_id,
+            identifier: signupData.emailOrPhone,
+            profile_id: result.profile_id,
+            timestamp: Date.now(),
+          });
+
+          try {
+            const profileResult = await getUserProfile({ uid: signinResult.uid });
+            if (profileResult.ok) {
+              await sessionStorage.saveUser({
+                uid: profileResult.uid,
+                identifier: profileResult.identifier,
+                profile_id: profileResult.profile_id,
+                profile_image_url: profileResult.profile_image_url,
+                email: profileResult.email,
+                phone_number: profileResult.phone_number,
+              });
+            }
+          } catch (profileError) {
+            console.error('Failed to fetch user profile:', profileError);
+            await sessionStorage.saveUser({
+              uid: signinResult.uid,
+              identifier: signupData.emailOrPhone,
+              profile_id: result.profile_id,
+            });
+          }
+
+          signupStorage.clear();
+          router.replace('/(tabs)');
+        } else {
+          setError('Sign up succeeded but login failed. Please try logging in.');
+        }
       } else {
         setError('Sign up failed. Please try again.');
       }

@@ -78,6 +78,7 @@ export const sessionStorage = {
   async clearSession(): Promise<void> {
     try {
       await AsyncStorage.multiRemove([SESSION_KEY, USER_KEY]);
+      await AsyncStorage.clear();
     } catch (error) {
       console.error('Failed to clear session:', error);
     }

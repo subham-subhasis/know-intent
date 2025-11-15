@@ -194,3 +194,20 @@ export interface UpdateInterestsSeedRes {
 
 export const updateInterestsSeed = (data: UpdateInterestsSeedReq) =>
   request<UpdateInterestsSeedRes>('/update_interests_seed', 'POST', data);
+
+export interface GetUserProfileReq {
+  uid: string;
+}
+
+export interface GetUserProfileRes {
+  ok: boolean;
+  uid: string;
+  identifier: string;
+  profile_id?: string;
+  profile_image_url?: string;
+  email?: string;
+  phone_number?: string;
+}
+
+export const getUserProfile = (data: GetUserProfileReq) =>
+  request<GetUserProfileRes>('/get_user_profile', 'POST', data);
