@@ -28,8 +28,12 @@ export default function SettingsPage() {
   const [showProfileSlider, setShowProfileSlider] = useState(false);
 
   const handleLogout = async () => {
-    await sessionStorage.clearSession();
-    router.replace('/');
+    try {
+      await sessionStorage.clearSession();
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleAccountPress = () => {

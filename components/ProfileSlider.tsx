@@ -113,10 +113,14 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   };
 
   const handleLogoutConfirm = async () => {
-    await sessionStorage.clearSession();
-    setShowLogoutConfirm(false);
-    onClose();
-    router.replace('/');
+    try {
+      await sessionStorage.clearSession();
+      setShowLogoutConfirm(false);
+      onClose();
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const handleLogoutCancel = () => {
