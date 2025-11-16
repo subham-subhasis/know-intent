@@ -676,7 +676,6 @@ export default function HomePage() {
                   ) : (
                     <View style={styles.followButtonContent}>
                       <Plus size={14} color="#FFFFFF" strokeWidth={2.5} />
-                      <Text style={styles.followButtonText}>Follow</Text>
                     </View>
                   )}
                 </TouchableOpacity>
