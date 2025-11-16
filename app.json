@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow this app to access your photos to upload profile pictures.",
+        "NSCameraUsageDescription": "Allow this app to use the camera to take photos."
+      }
     },
     "web": {
       "bundler": "metro",
