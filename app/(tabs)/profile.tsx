@@ -276,36 +276,36 @@ export default function ProfilePage() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <View style={styles.profileSection}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            {user?.profile_image_url ? (
-              <Image
-                source={{ uri: user.profile_image_url }}
-                style={styles.avatarImage}
-              />
-            ) : (
-              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                {user?.identifier?.charAt(0).toUpperCase() || 'U'}
-              </Text>
-            )}
+        <View style={styles.topRow}>
+          <View style={styles.leftSection}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              {user?.profile_image_url ? (
+                <Image
+                  source={{ uri: user.profile_image_url }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+                  {user?.identifier?.charAt(0).toUpperCase() || 'U'}
+                </Text>
+              )}
+            </View>
+            <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
           </View>
-          <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(posts.length)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(0)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
+            </View>
+          </View>
         </View>
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={[styles.statsContainer, { backgroundColor: colors.surface }]}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(posts.length)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(0)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
-          </View>
-        </View>
-
         <View style={[styles.viewModeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity
             style={[
@@ -398,70 +398,63 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 16,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  profileSection: {
+  topRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  leftSection: {
+    flexDirection: 'column',
+    gap: 4,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   userId: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
+    color: '#6B7280',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
     color: '#6B7280',
   },
   content: {
     flex: 1,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 24,
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#E5E7EB',
   },
   viewModeToggle: {
     flexDirection: 'row',
