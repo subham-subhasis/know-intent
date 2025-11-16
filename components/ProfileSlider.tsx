@@ -18,6 +18,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
 import { useRouter } from 'expo-router';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
