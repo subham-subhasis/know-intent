@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   earningsRow: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
     width: '100%',
