@@ -277,7 +277,7 @@ export default function ProfilePage() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <View style={styles.topRow}>
-          <View style={styles.leftSection}>
+          <View style={styles.profileSection}>
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
               {user?.profile_image_url ? (
                 <Image
@@ -290,7 +290,10 @@ export default function ProfilePage() {
                 </Text>
               )}
             </View>
-            <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: colors.text }]}>{user?.identifier || 'User'}</Text>
+              <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
+            </View>
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
@@ -408,9 +411,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  leftSection: {
-    flexDirection: 'column',
-    gap: 4,
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   avatar: {
     width: 56,
@@ -430,9 +434,19 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
   },
+  userInfo: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
   userId: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#6B7280',
   },
   statsRow: {
