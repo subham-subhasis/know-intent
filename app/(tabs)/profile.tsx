@@ -291,7 +291,7 @@ export default function ProfilePage() {
               )}
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: colors.text }]}>{user?.uFullName || 'Subham'}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>{user?.firstName || 'Subham'}</Text>
               <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
             </View>
           </View>
