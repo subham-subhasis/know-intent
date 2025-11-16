@@ -11,6 +11,7 @@ import {
 import { X, Upload, Image, Video, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
+import { showImagePickerOptions, pickVideoFromLibrary, PickedAsset } from '@/lib/imagePicker';
 
 interface UploadModalProps {
   onClose: () => void;
@@ -36,10 +37,34 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   const [customKPI, setCustomKPI] = useState('');
   const [showCustomKPI, setShowCustomKPI] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<PickedAsset | null>(null);
   const { colors, theme } = useTheme();
 
+  const handleMediaSelect = async () => {
+    if (!mediaType) return;
+
+    let asset: PickedAsset | null = null;
+
+    if (mediaType === 'image') {
+      asset = await showImagePickerOptions({
+        allowsEditing: true,
+        quality: 0.8,
+      });
+    } else if (mediaType === 'video') {
+      asset = await pickVideoFromLibrary({
+        allowsEditing: false,
+        quality: 0.8,
+      });
+    }
+
+    if (asset) {
+      setSelectedMedia(asset);
+      console.log('Selected media:', asset);
+    }
+  };
+
   const handleUpload = () => {
-    console.log('Upload:', { description, selectedKPI, customKPI, mediaType });
+    console.log('Upload:', { description, selectedKPI, customKPI, mediaType, selectedMedia });
     onClose();
   };
 
@@ -111,14 +136,14 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         </View>
 
         {mediaType && (
-          <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.uploadArea} activeOpacity={0.8} onPress={handleMediaSelect}>
             <LinearGradient
               colors={['#F3F4F6', '#E5E7EB']}
               style={styles.uploadGradient}
             >
               <Upload size={32} color={colors.textSecondary} strokeWidth={2} />
               <Text style={[styles.uploadText, { color: colors.textSecondary }]}>
-                Tap to select {mediaType === 'image' ? 'an image' : 'a video'}
+                {selectedMedia ? `Selected: ${selectedMedia.fileName}` : `Tap to select ${mediaType === 'image' ? 'an image' : 'a video'}`}
               </Text>
               {mediaType === 'video' && (
                 <Text style={[styles.uploadHint, { color: colors.textTertiary }]}>Max duration: 5 minutes</Text>

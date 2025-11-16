@@ -18,7 +18,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
 import { useRouter } from 'expo-router';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { pickImageFromLibrary, takePhoto } from '@/lib/imagePicker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -130,30 +130,37 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     setShowImagePicker(true);
   };
 
-  const handleImageOptionSelect = (option: 'camera' | 'gallery') => {
+  const handleImageOptionSelect = async (option: 'camera' | 'gallery') => {
     setShowImagePicker(false);
     if (option === 'gallery') {
-      handleSelectFromGallery();
+      await handleSelectFromGallery();
     } else {
-      Alert.alert('Camera', 'Camera feature will be available in the mobile app');
+      await handleTakePhoto();
     }
   };
 
-  const handleSelectFromGallery = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          uploadProfileImage(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
+  const handleSelectFromGallery = async () => {
+    const asset = await pickImageFromLibrary({
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (asset) {
+      await uploadProfileImage(asset.uri);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const asset = await takePhoto({
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (asset) {
+      await uploadProfileImage(asset.uri);
+    }
   };
 
   const uploadProfileImage = async (uri: string) => {
