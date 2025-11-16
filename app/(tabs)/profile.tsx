@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Image,
+  ScrollView,
 } from 'react-native';
 import { Grid3x3, Network, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -262,93 +263,96 @@ export default function ProfilePage() {
     return count.toString();
   };
 
-  const totalViews = posts.reduce((sum, post) => sum + post.views_count, 0);
-  const totalChains = posts.reduce((sum, post) => sum + post.spider_chains_count, 0);
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
-        <View style={styles.headerContent}>
-          <View style={styles.leftSection}>
-            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-              {user?.profile_image_url ? (
-                <Image
-                  source={{ uri: user.profile_image_url }}
-                  style={styles.avatarImage}
-                />
-              ) : (
-                <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                  {user?.identifier?.charAt(0).toUpperCase() || 'U'}
-                </Text>
-              )}
-            </View>
-            <Text style={[styles.userName, { color: colors.text }]}>{user?.identifier || 'User'}</Text>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <View style={styles.profileSection}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            {user?.profile_image_url ? (
+              <Image
+                source={{ uri: user.profile_image_url }}
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+                {user?.identifier?.charAt(0).toUpperCase() || 'U'}
+              </Text>
+            )}
           </View>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>{posts.length}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalViews)}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Views</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.text }]}>{formatCount(totalChains)}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Intent Tree</Text>
-            </View>
-          </View>
+          <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
         </View>
       </View>
 
-      <View style={[styles.viewModeContainer, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
-        <TouchableOpacity
-          style={[
-            styles.viewModeButton,
-            viewMode === 'grid' && { backgroundColor: colors.primary },
-          ]}
-          onPress={() => setViewMode('grid')}
-        >
-          <Grid3x3
-            size={20}
-            color={viewMode === 'grid' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
-            strokeWidth={2}
-          />
-          <Text
-            style={[
-              styles.viewModeText,
-              { color: viewMode === 'grid' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
-            ]}
-          >
-            Grid
-          </Text>
-        </TouchableOpacity>
+      <ScrollView style={styles.content}>
+        <View style={[styles.statsContainer, { backgroundColor: colors.surface }]}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(posts.length)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(0)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
+          </View>
+        </View>
 
-        <TouchableOpacity
-          style={[
-            styles.viewModeButton,
-            viewMode === 'spider' && { backgroundColor: colors.primary },
-          ]}
-          onPress={() => setViewMode('spider')}
-        >
-          <Network
-            size={20}
-            color={viewMode === 'spider' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary}
-            strokeWidth={2}
-          />
-          <Text
+        <View style={[styles.viewModeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <TouchableOpacity
             style={[
-              styles.viewModeText,
-              { color: viewMode === 'spider' ? (theme === 'dark' ? colors.background : '#FFFFFF') : colors.textSecondary },
+              styles.toggleButton,
+              viewMode === 'grid' && { backgroundColor: colors.primary },
             ]}
+            onPress={() => setViewMode('grid')}
+            activeOpacity={0.7}
           >
-            Intent Tree
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Grid3x3
+              size={20}
+              color={viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary}
+              strokeWidth={2}
+            />
+            <Text
+              style={[
+                styles.toggleText,
+                { color: viewMode === 'grid' ? '#FFFFFF' : colors.textSecondary },
+              ]}
+            >
+              Grid
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.toggleButton,
+              viewMode === 'spider' && { backgroundColor: colors.primary },
+            ]}
+            onPress={() => setViewMode('spider')}
+            activeOpacity={0.7}
+          >
+            <Network
+              size={20}
+              color={viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary}
+              strokeWidth={2}
+            />
+            <Text
+              style={[
+                styles.toggleText,
+                { color: viewMode === 'spider' ? '#FFFFFF' : colors.textSecondary },
+              ]}
+            >
+              Intent Chain
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.content}>
         {viewMode === 'grid' ? (
           <GridView
             posts={posts}
@@ -364,7 +368,7 @@ export default function ProfilePage() {
             isLoading={isLoading}
           />
         )}
-      </View>
+      </ScrollView>
 
       <TouchableOpacity
         style={[styles.floatingButton, { backgroundColor: colors.primary }]}
@@ -397,83 +401,92 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#E5E7EB',
   },
-  headerContent: {
-    flexDirection: 'row',
+  profileSection: {
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  leftSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
   },
   avatarText: {
-    fontSize: 20,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  userName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  statBox: {
-    alignItems: 'center',
-  },
-  statValue: {
+  userId: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  statLabel: {
-    fontSize: 10,
     fontWeight: '600',
     color: '#6B7280',
-    marginTop: 2,
   },
-  viewModeContainer: {
+  content: {
+    flex: 1,
+  },
+  statsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 24,
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
   },
-  viewModeButton: {
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E5E7EB',
+  },
+  viewModeToggle: {
+    flexDirection: 'row',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 4,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  toggleButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
     gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
   },
-  viewModeText: {
+  toggleText: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  content: {
-    flex: 1,
+    color: '#6B7280',
   },
   floatingButton: {
     position: 'absolute',
