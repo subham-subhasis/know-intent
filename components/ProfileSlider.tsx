@@ -315,7 +315,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   ) : (
                     <View style={styles.greetingRow}>
                       <Text style={[styles.greetingText, { color: colors.text }]}>
-                        Namaste <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
+                        Namaste! <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
                       </Text>
                       <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
                         <Edit2 size={16} color={colors.icon} strokeWidth={2} />
