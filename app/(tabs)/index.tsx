@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
+import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight, Plus, UserPlus } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 import Svg, { Circle } from 'react-native-svg';
 import { UploadModal } from '@/components/UploadModal';
@@ -675,7 +675,7 @@ export default function HomePage() {
                     <Text style={[styles.followButtonText, styles.followingButtonText, { color: colors.text }]}>Following</Text>
                   ) : (
                     <View style={styles.followButtonContent}>
-                      <Plus size={14} color="#FFFFFF" strokeWidth={2.5} />
+                      <UserPlus size={14} color="#FFFFFF" strokeWidth={2.5} />
                     </View>
                   )}
                 </TouchableOpacity>
