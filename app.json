@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.subham47.knowintent",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Allow this app to access your photos to upload profile pictures.",
+        "NSCameraUsageDescription": "Allow this app to use the camera to take photos."
       }
     },
     "web": {

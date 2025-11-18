@@ -11,13 +11,15 @@ import {
   Animated,
   Dimensions,
   Switch,
+  ScrollView,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2 } from 'lucide-react-native';
+import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2, UserCircle, Plus } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
 import { useRouter } from 'expo-router';
+import { pickImageFromLibrary, takePhoto } from '@/lib/imagePicker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -37,6 +39,14 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const [updating, setUpdating] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editedName, setEditedName] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedPhone, setEditedPhone] = useState('');
+  const [selectedKpis, setSelectedKpis] = useState<string[]>([]);
+  const [availableKpis, setAvailableKpis] = useState<string[]>([]);
+  const [showKpiPicker, setShowKpiPicker] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
@@ -62,9 +72,22 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     const userData = await sessionStorage.getUser();
     setUser(userData);
     setNewUID(userData?.uid || '');
+    setEditedName(userData?.identifier || '');
+    setEditedEmail(userData?.email || '');
+    setEditedPhone(userData?.phone_number || '');
+    setSelectedKpis((userData as any)?.kpis || []);
+    loadAvailableKpis();
+  };
+
+  const loadAvailableKpis = () => {
+    const kpiData = require('@/assets/json/kpi.json');
+    setAvailableKpis(Object.keys(kpiData));
   };
 
   const handleClose = () => {
+    setShowSettings(false);
+    setShowUserDetails(false);
+    setEditingField(null);
     Animated.timing(slideAnim, {
       toValue: SCREEN_WIDTH,
       duration: 250,
@@ -72,6 +95,25 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     }).start(() => {
       onClose();
     });
+  };
+
+  const handleEditField = (field: string) => {
+    setEditingField(field);
+  };
+
+  const handleSaveField = async (field: string) => {
+    setEditingField(null);
+  };
+
+  const handleAddKpi = (kpi: string) => {
+    if (!selectedKpis.includes(kpi)) {
+      setSelectedKpis([...selectedKpis, kpi]);
+    }
+    setShowKpiPicker(false);
+  };
+
+  const handleRemoveKpi = (kpi: string) => {
+    setSelectedKpis(selectedKpis.filter(k => k !== kpi));
   };
 
   const handleEditUID = () => {
@@ -129,30 +171,37 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     setShowImagePicker(true);
   };
 
-  const handleImageOptionSelect = (option: 'camera' | 'gallery') => {
+  const handleImageOptionSelect = async (option: 'camera' | 'gallery') => {
     setShowImagePicker(false);
     if (option === 'gallery') {
-      handleSelectFromGallery();
+      await handleSelectFromGallery();
     } else {
-      Alert.alert('Camera', 'Camera feature will be available in the mobile app');
+      await handleTakePhoto();
     }
   };
 
-  const handleSelectFromGallery = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          uploadProfileImage(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
+  const handleSelectFromGallery = async () => {
+    const asset = await pickImageFromLibrary({
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (asset) {
+      await uploadProfileImage(asset.uri);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    const asset = await takePhoto({
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (asset) {
+      await uploadProfileImage(asset.uri);
+    }
   };
 
   const uploadProfileImage = async (uri: string) => {
@@ -244,7 +293,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
           </View>
 
           <View style={styles.content}>
-            {!showSettings ? (
+            {!showSettings && !showUserDetails ? (
               <View style={styles.profileSection}>
                 <TouchableOpacity
                   style={styles.avatarContainer}
@@ -307,7 +356,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   ) : (
                     <View style={styles.greetingRow}>
                       <Text style={[styles.greetingText, { color: colors.text }]}>
-                        Namaste <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
+                        Namaste! <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
                       </Text>
                       <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
                         <Edit2 size={16} color={colors.icon} strokeWidth={2} />
@@ -364,6 +413,15 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
 
                   <TouchableOpacity
                     style={styles.menuItem}
+                    onPress={() => setShowUserDetails(true)}
+                    activeOpacity={0.7}
+                  >
+                    <UserCircle size={20} color={colors.icon} strokeWidth={2} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>User Details</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.menuItem}
                     onPress={() => setShowSettings(true)}
                     activeOpacity={0.7}
                   >
@@ -372,7 +430,129 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   </TouchableOpacity>
                 </View>
               </View>
-            ) : (
+            ) : showUserDetails ? (
+              <ScrollView style={styles.detailsPage}>
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setShowUserDetails(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.backText, { color: colors.primary }]}>{'←'} Back</Text>
+                </TouchableOpacity>
+
+                <Text style={[styles.settingsTitle, { color: colors.text }]}>User Details</Text>
+
+                <View style={styles.detailsSection}>
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailLeft}>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>FULL NAME</Text>
+                      {editingField === 'name' ? (
+                        <TextInput
+                          style={[styles.detailInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
+                          value={editedName}
+                          onChangeText={setEditedName}
+                          autoFocus
+                          onBlur={() => setEditingField(null)}
+                        />
+                      ) : (
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.identifier || '-'}</Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => editingField === 'name' ? handleSaveField('name') : handleEditField('name')}
+                      activeOpacity={0.7}
+                    >
+                      {editingField === 'name' ? (
+                        <Check size={20} color="#10B981" strokeWidth={2.5} />
+                      ) : (
+                        <Edit2 size={18} color={colors.icon} strokeWidth={2} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailLeft}>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>EMAIL</Text>
+                      {editingField === 'email' ? (
+                        <TextInput
+                          style={[styles.detailInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
+                          value={editedEmail}
+                          onChangeText={setEditedEmail}
+                          autoFocus
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          onBlur={() => setEditingField(null)}
+                        />
+                      ) : (
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.email || '-'}</Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => editingField === 'email' ? handleSaveField('email') : handleEditField('email')}
+                      activeOpacity={0.7}
+                    >
+                      {editingField === 'email' ? (
+                        <Check size={20} color="#10B981" strokeWidth={2.5} />
+                      ) : (
+                        <Edit2 size={18} color={colors.icon} strokeWidth={2} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailLeft}>
+                      <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>PHONE NUMBER</Text>
+                      {editingField === 'phone' ? (
+                        <TextInput
+                          style={[styles.detailInput, { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border }]}
+                          value={editedPhone}
+                          onChangeText={setEditedPhone}
+                          autoFocus
+                          keyboardType="phone-pad"
+                          onBlur={() => setEditingField(null)}
+                        />
+                      ) : (
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.phone_number || '-'}</Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => editingField === 'phone' ? handleSaveField('phone') : handleEditField('phone')}
+                      activeOpacity={0.7}
+                    >
+                      {editingField === 'phone' ? (
+                        <Check size={20} color="#10B981" strokeWidth={2.5} />
+                      ) : (
+                        <Edit2 size={18} color={colors.icon} strokeWidth={2} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={[styles.separator, { backgroundColor: colors.border }]} />
+
+                <View style={styles.kpiSection}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Primary Interests</Text>
+                  <View style={styles.kpiList}>
+                    {selectedKpis.map((kpi, index) => (
+                      <View key={index} style={[styles.kpiChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <Text style={[styles.kpiChipText, { color: colors.text }]}>{kpi}</Text>
+                        <TouchableOpacity onPress={() => handleRemoveKpi(kpi)} activeOpacity={0.7}>
+                          <X size={16} color={colors.textSecondary} strokeWidth={2} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.addKpiButton, { backgroundColor: colors.primary }]}
+                    onPress={() => setShowKpiPicker(true)}
+                    activeOpacity={0.7}
+                  >
+                    <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
+                    <Text style={styles.addKpiText}>Add Interest</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            ) : showSettings ? (
             <View style={styles.settingsPage}>
               <TouchableOpacity
                 style={styles.backButton}
@@ -403,8 +583,8 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                 />
               </View>
             </View>
-          )}
-        </View>
+            ) : null}
+          </View>
 
         {showLogoutConfirm && (
           <View style={[styles.confirmOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
@@ -461,6 +641,36 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                 >
                   <Text style={[styles.cancelText, { color: '#DC2626' }]}>Cancel</Text>
                 </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {showKpiPicker && (
+            <View style={[styles.kpiPickerOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+              <TouchableOpacity
+                style={styles.overlayTouchable}
+                activeOpacity={1}
+                onPress={() => setShowKpiPicker(false)}
+              />
+              <View style={[styles.kpiPickerModal, { backgroundColor: colors.background }]}>
+                <View style={[styles.kpiPickerHeader, { borderBottomColor: colors.borderLight }]}>
+                  <Text style={[styles.kpiPickerTitle, { color: colors.text }]}>Select Interest</Text>
+                  <TouchableOpacity onPress={() => setShowKpiPicker(false)} activeOpacity={0.7}>
+                    <X size={24} color={colors.icon} strokeWidth={2} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.kpiPickerContent}>
+                  {availableKpis.filter(kpi => !selectedKpis.includes(kpi)).map((kpi, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[styles.kpiPickerItem, { borderBottomColor: colors.borderLight }]}
+                      onPress={() => handleAddKpi(kpi)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.kpiPickerItemText, { color: colors.text }]}>{kpi}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             </View>
           )}
@@ -608,7 +818,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   earningsRow: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
     width: '100%',
@@ -828,5 +1038,136 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     textAlign: 'center',
     width: '100%',
+  },
+  detailsPage: {
+    padding: 24,
+  },
+  detailsSection: {
+    gap: 20,
+    marginBottom: 24,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  detailLeft: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1F2937',
+  },
+  detailInput: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  kpiSection: {
+    gap: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  kpiList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  kpiChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 20,
+  },
+  kpiChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F2937',
+  },
+  addKpiButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  addKpiText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  kpiPickerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  kpiPickerModal: {
+    width: '90%',
+    maxWidth: 400,
+    maxHeight: '70%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  kpiPickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  kpiPickerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  kpiPickerContent: {
+    maxHeight: 400,
+  },
+  kpiPickerItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  kpiPickerItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1F2937',
   },
 });

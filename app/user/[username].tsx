@@ -6,6 +6,7 @@ import {
   Platform,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Grid3x3, Network, ArrowLeft, UserPlus, UserCheck } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -226,8 +227,28 @@ export default function UserProfilePage() {
         >
           <ArrowLeft size={24} color={colors.text} strokeWidth={2} />
         </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>@{username}</Text>
+        <View style={styles.headerContent}>
+          <View style={styles.profileSection}>
+            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
+                {username?.charAt(0).toUpperCase() || 'U'}
+              </Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: colors.text }]}>{userData.name}</Text>
+              <Text style={[styles.userId, { color: colors.textSecondary }]}>@{username}</Text>
+            </View>
+          </View>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(userData.posts)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(userData.followers)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
+            </View>
+          </View>
         </View>
         <TouchableOpacity
           style={[styles.followButton, {
@@ -245,22 +266,6 @@ export default function UserProfilePage() {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={[styles.statsContainer, { backgroundColor: colors.surface }]}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(userData.posts)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Posts</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(userData.followers)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Followers</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(userData.following)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Following</Text>
-          </View>
-        </View>
 
         <View style={[styles.viewModeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity
@@ -316,7 +321,7 @@ export default function UserProfilePage() {
             posts={posts}
             onPostPress={handlePostPress}
             onViewAllChains={handleViewAllChains}
-            loadChildPosts={loadChildPosts}
+            onLoadChildPosts={loadChildPosts}
           />
         )}
       </ScrollView>
@@ -332,10 +337,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 16,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
@@ -344,16 +348,65 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
-  headerCenter: {
+  headerContent: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginLeft: 8,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1F2937',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
+  avatarText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  userInfo: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  userId: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   followButton: {
     width: 40,
@@ -361,39 +414,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginLeft: 8,
   },
   content: {
     flex: 1,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 24,
-    marginHorizontal: 16,
-    marginTop: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#E5E7EB',
   },
   viewModeToggle: {
     flexDirection: 'row',

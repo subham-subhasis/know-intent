@@ -71,8 +71,6 @@ export default function LandingPage() {
       const result = await signin({
         identifier: identifier,
         otp_verified: true,
-        device_info: Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web',
-        location_info: 'Unknown',
       });
 
       if (result.ok) {

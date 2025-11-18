@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight, Plus, UserPlus } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 import Svg, { Circle } from 'react-native-svg';
 import { UploadModal } from '@/components/UploadModal';
@@ -98,6 +98,7 @@ const VIDEO_CARDS = [
     title: 'Understanding Machine Learning Basics',
     creator: 'Tech Explained',
     username: 'techexplained',
+    creatorAvatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '1.2M',
     duration: '00:45',
     postedTime: '2h ago',
@@ -106,12 +107,14 @@ const VIDEO_CARDS = [
     spiderChains: 1240,
     aspectRatio: '1:1',
     thumbnail: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    isFollowing: false,
   },
   {
     id: '2',
     title: 'Building a Successful Startup',
     creator: 'Business Insider',
     username: 'businessinsider',
+    creatorAvatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '890K',
     duration: '00:58',
     postedTime: '5h ago',
@@ -120,12 +123,14 @@ const VIDEO_CARDS = [
     spiderChains: 890,
     aspectRatio: '16:9',
     thumbnail: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    isFollowing: false,
   },
   {
     id: '3',
     title: 'Healthy Morning Routines',
     creator: 'Wellness Guide',
     username: 'wellnessguide',
+    creatorAvatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '2.1M',
     duration: '00:32',
     postedTime: '1d ago',
@@ -134,12 +139,14 @@ const VIDEO_CARDS = [
     spiderChains: 2340,
     aspectRatio: '4:5',
     thumbnail: 'https://images.pexels.com/photos/3768593/pexels-photo-3768593.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    isFollowing: true,
   },
   {
     id: '4',
     title: 'The Future of Space Exploration',
     creator: 'Science Today',
     username: 'sciencetoday',
+    creatorAvatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '3.5M',
     duration: '00:55',
     postedTime: '3d ago',
@@ -148,12 +155,14 @@ const VIDEO_CARDS = [
     spiderChains: 4560,
     aspectRatio: '1:1',
     thumbnail: 'https://images.pexels.com/photos/2159/flight-sky-earth-space.jpg?auto=compress&cs=tinysrgb&w=1080',
+    isFollowing: false,
   },
   {
     id: '5',
     title: 'Digital Art Masterclass',
     creator: 'Creative Studio',
     username: 'creativestudio',
+    creatorAvatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '650K',
     duration: '00:48',
     postedTime: '1w ago',
@@ -162,12 +171,14 @@ const VIDEO_CARDS = [
     spiderChains: 670,
     aspectRatio: '16:9',
     thumbnail: 'https://images.pexels.com/photos/1509582/pexels-photo-1509582.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    isFollowing: true,
   },
   {
     id: '6',
     title: 'Mindfulness & Meditation',
     creator: 'Zen Master',
     username: 'zenmaster',
+    creatorAvatar: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=100',
     views: '1.5M',
     duration: '00:42',
     postedTime: '4h ago',
@@ -176,6 +187,7 @@ const VIDEO_CARDS = [
     spiderChains: 1580,
     aspectRatio: '4:5',
     thumbnail: 'https://images.pexels.com/photos/3822621/pexels-photo-3822621.jpeg?auto=compress&cs=tinysrgb&w=1080',
+    isFollowing: false,
   },
 ];
 
@@ -265,6 +277,7 @@ export default function HomePage() {
   const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
+  const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [showTrendingModal, setShowTrendingModal] = useState(false);
   const [hasViewedTrending, setHasViewedTrending] = useState(false);
   const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
@@ -415,6 +428,18 @@ export default function HomePage() {
 
   const handleSpiderChain = (videoId: string) => {
     setExpandedVideoId(prev => prev === videoId ? null : videoId);
+  };
+
+  const handleFollow = (username: string) => {
+    setFollowingUsers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(username)) {
+        newSet.delete(username);
+      } else {
+        newSet.add(username);
+      }
+      return newSet;
+    });
   };
 
   const handleOpenTrending = async (category: string) => {
@@ -624,8 +649,37 @@ export default function HomePage() {
           ) : null
         }
         renderItem={useCallback(({ item: video, index }) => {
+          const isFollowing = followingUsers.has(video.username);
           return (
             <View>
+              <View style={[styles.creatorHeader, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
+                <TouchableOpacity
+                  style={styles.creatorInfo}
+                  activeOpacity={0.7}
+                  onPress={() => router.push(`/user/${video.username}`)}
+                >
+                  <Image
+                    source={{ uri: video.creatorAvatar }}
+                    style={styles.creatorAvatar}
+                  />
+                  <Text style={[styles.creatorName, { color: colors.text }]} numberOfLines={1}>
+                    {video.creator}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.followButton, isFollowing && styles.followingButton]}
+                  activeOpacity={0.7}
+                  onPress={() => handleFollow(video.username)}
+                >
+                  {isFollowing ? (
+                    <Text style={[styles.followButtonText, styles.followingButtonText, { color: colors.text }]}>Following</Text>
+                  ) : (
+                    <View style={styles.followButtonContent}>
+                      <UserPlus size={14} color="#FFFFFF" strokeWidth={2.5} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 style={styles.videoCard}
                 activeOpacity={0.8}
@@ -681,13 +735,6 @@ export default function HomePage() {
                       <Text style={styles.statText}>{formatCount(video.spiderChains)}</Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.topBadgeRow}>
-                    <TouchableOpacity onPress={() => router.push(`/user/${video.username}`)} activeOpacity={0.7}>
-                      <View style={styles.usernameBadge}>
-                        <Text style={[styles.usernameBadgeText, { color: colors.primary }]}>{video.creator}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
                   <View style={styles.durationBadge}>
                     <Text style={styles.durationText}>{video.duration}</Text>
                   </View>
@@ -718,7 +765,7 @@ export default function HomePage() {
               {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
           );
-        }, [feedData, likedVideos, dislikedVideos, expandedVideoId, colors, theme, router])}
+        }, [feedData, likedVideos, dislikedVideos, expandedVideoId, followingUsers, colors, theme, router])}
       />
 
       <ErrorToast
@@ -971,6 +1018,58 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     paddingBottom: Platform.OS === 'ios' ? 110 : 90,
   },
+  creatorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  creatorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  creatorAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    backgroundColor: '#E5E7EB',
+  },
+  creatorName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+  },
+  followButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#1F2937',
+  },
+  followingButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  followButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  followButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  followingButtonText: {
+    color: '#6B7280',
+  },
   videoCard: {
     marginBottom: 0,
     borderRadius: 0,
@@ -1052,23 +1151,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  topBadgeRow: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-  },
-  usernameBadge: {
-    paddingHorizontal: 2,
-    paddingVertical: 2,
-  },
-  usernameBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
   videoInfo: {
     padding: 16,
     borderTopWidth: 1,
@@ -1091,11 +1173,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  creatorName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
   },
   viewsText: {
     fontSize: 12,
