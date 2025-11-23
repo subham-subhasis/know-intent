@@ -17,7 +17,8 @@ import { useState, useEffect, useRef } from 'react';
 import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2, UserCircle, Plus } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
-import { getPresignedUrl, updateProfileImage, updateUsername } from '@/src/api/userService';
+import { updateUser, getUserDetails } from '@/src/api/userService';
+import { authService } from '@/services/authService';
 import { useRouter } from 'expo-router';
 import { pickImageFromLibrary, takePhoto } from '@/lib/imagePicker';
 
@@ -71,11 +72,11 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const loadUser = async () => {
     const userData = await sessionStorage.getUser();
     setUser(userData);
-    setNewUID(userData?.uid || '');
-    setEditedName(userData?.identifier || '');
+    setNewUID(userData?.username || '');
+    setEditedName(`${userData?.first_name || ''} ${userData?.last_name || ''}`.trim());
     setEditedEmail(userData?.email || '');
-    setEditedPhone(userData?.phone_number || '');
-    setSelectedKpis((userData as any)?.kpis || []);
+    setEditedPhone(userData?.phone || '');
+    setSelectedKpis(userData?.kpis || []);
     loadAvailableKpis();
   };
 
@@ -102,18 +103,84 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   };
 
   const handleSaveField = async (field: string) => {
-    setEditingField(null);
-  };
+    if (!user) return;
 
-  const handleAddKpi = (kpi: string) => {
-    if (!selectedKpis.includes(kpi)) {
-      setSelectedKpis([...selectedKpis, kpi]);
+    setUpdating(true);
+    try {
+      const authToken = await authService.getAuthToken();
+      if (!authToken) {
+        Alert.alert('Error', 'Authentication required');
+        return;
+      }
+
+      const updates: any = {};
+
+      if (field === 'name') {
+        const names = editedName.split(' ');
+        updates.first_name = names[0] || '';
+        updates.last_name = names.slice(1).join(' ') || '';
+      } else if (field === 'email') {
+        Alert.alert('Info', 'Email updates are not supported through this endpoint');
+        setEditingField(null);
+        return;
+      } else if (field === 'phone') {
+        Alert.alert('Info', 'Phone updates are not supported through this endpoint');
+        setEditingField(null);
+        return;
+      }
+
+      const result = await updateUser(user.id, updates, authToken);
+
+      if (result.status === 'success') {
+        await sessionStorage.saveUser(result.user);
+        await loadUser();
+        setEditingField(null);
+      } else {
+        Alert.alert('Update Failed', 'Unable to update profile. Please try again.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to update profile');
+    } finally {
+      setUpdating(false);
     }
-    setShowKpiPicker(false);
   };
 
-  const handleRemoveKpi = (kpi: string) => {
-    setSelectedKpis(selectedKpis.filter(k => k !== kpi));
+  const handleAddKpi = async (kpi: string) => {
+    if (!user || selectedKpis.includes(kpi)) {
+      setShowKpiPicker(false);
+      return;
+    }
+
+    const newKpis = [...selectedKpis, kpi];
+    setSelectedKpis(newKpis);
+    setShowKpiPicker(false);
+
+    try {
+      const authToken = await authService.getAuthToken();
+      if (!authToken) return;
+
+      await updateUser(user.id, { kpis: newKpis }, authToken);
+    } catch (error) {
+      console.error('Failed to update KPIs:', error);
+      setSelectedKpis(selectedKpis);
+    }
+  };
+
+  const handleRemoveKpi = async (kpi: string) => {
+    if (!user) return;
+
+    const newKpis = selectedKpis.filter(k => k !== kpi);
+    setSelectedKpis(newKpis);
+
+    try {
+      const authToken = await authService.getAuthToken();
+      if (!authToken) return;
+
+      await updateUser(user.id, { kpis: newKpis }, authToken);
+    } catch (error) {
+      console.error('Failed to update KPIs:', error);
+      setSelectedKpis(selectedKpis);
+    }
   };
 
   const handleEditUID = () => {
@@ -121,28 +188,36 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   };
 
   const handleSaveUID = async () => {
-    if (!user || !newUID.trim() || newUID === user.uid) {
+    if (!user || !newUID.trim() || newUID === user.username) {
       setIsEditingUID(false);
       return;
     }
 
     setUpdating(true);
     try {
-      const result = await updateUsername({
-        current_uid: user.uid,
-        new_username: newUID.trim(),
-      });
+      const authToken = await authService.getAuthToken();
+      if (!authToken) {
+        Alert.alert('Error', 'Authentication required');
+        return;
+      }
 
-      if (result.ok) {
-        const updatedUser = { ...user, uid: result.uid };
-        await sessionStorage.saveUser(updatedUser);
+      const result = await updateUser(user.id, { username: newUID.trim() }, authToken);
+
+      if (result.status === 'success') {
+        await sessionStorage.saveUser(result.user);
+        await sessionStorage.saveSession({
+          id: result.user.id,
+          username: result.user.username,
+          auth_token: authToken,
+          timestamp: Date.now(),
+        });
         await loadUser();
         setIsEditingUID(false);
       } else {
-        Alert.alert('Update Failed', 'Unable to update User Name. Please try again.');
+        Alert.alert('Update Failed', 'Unable to update username. Please try again.');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update User Name');
+      Alert.alert('Error', error.message || 'Failed to update username');
     } finally {
       setUpdating(false);
     }
@@ -205,52 +280,8 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   };
 
   const uploadProfileImage = async (uri: string) => {
-    if (!user) return;
-
-    setUploading(true);
-    try {
-      const fileName = `avatar_${Date.now()}.jpg`;
-      const presignedData = await getPresignedUrl({
-        uid: user.uid,
-        profile_id: user.profile_id || '1',
-        file_name: fileName,
-        content_type: 'image/jpeg',
-      });
-
-      if (!presignedData.ok) {
-        throw new Error('Failed to get upload URL');
-      }
-
-      const response = await fetch(uri);
-      const fileBlob = await response.blob();
-
-      const uploadResponse = await fetch(presignedData.upload_url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'image/jpeg',
-        },
-        body: fileBlob,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const updateResult = await updateProfileImage({
-        uid: user.uid,
-        profile_id: user.profile_id || '1',
-        image_url: presignedData.image_url,
-      });
-
-      if (updateResult.ok) {
-        await sessionStorage.updateUserProfileImage(updateResult.profile_image_url);
-        await loadUser();
-      }
-    } catch (error: any) {
-      Alert.alert('Upload Failed', error.message || 'Unable to upload profile picture');
-    } finally {
-      setUploading(false);
-    }
+    Alert.alert('Info', 'Profile picture upload requires backend integration');
+    setUploading(false);
   };
 
   if (!visible) return null;
@@ -302,14 +333,14 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-                    {user?.profile_image_url ? (
+                    {user?.profile_pic_url ? (
                       <Image
-                        source={{ uri: user.profile_image_url }}
+                        source={{ uri: user.profile_pic_url }}
                         style={styles.avatarImage}
                       />
                     ) : (
                       <Text style={[styles.avatarText, { color: colors.background }]}>
-                        {user?.identifier?.charAt(0).toUpperCase() || 'U'}
+                        {user?.first_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
                       </Text>
                     )}
                   </View>
@@ -356,7 +387,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   ) : (
                     <View style={styles.greetingRow}>
                       <Text style={[styles.greetingText, { color: colors.text }]}>
-                        Namaste! <Text style={styles.greetingName}>{user?.uid || 'User'}</Text>
+                        Namaste! <Text style={styles.greetingName}>{user?.username || 'User'}</Text>
                       </Text>
                       <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
                         <Edit2 size={16} color={colors.icon} strokeWidth={2} />
@@ -392,7 +423,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   <View style={styles.infoRow}>
                     <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>PHONE NUMBER</Text>
                     <View style={styles.infoValueContainer}>
-                      <Text style={[styles.infoValue, { color: colors.text }]}>{user?.phone_number || '-'}</Text>
+                      <Text style={[styles.infoValue, { color: colors.text }]}>{user?.phone || '-'}</Text>
                       <TouchableOpacity activeOpacity={0.7}>
                         <Edit2 size={14} color={colors.icon} strokeWidth={2} />
                       </TouchableOpacity>
@@ -455,7 +486,9 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                           onBlur={() => setEditingField(null)}
                         />
                       ) : (
-                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.identifier || '-'}</Text>
+                        <Text style={[styles.detailValue, { color: colors.text }]}>
+                          {user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username || '-'}
+                        </Text>
                       )}
                     </View>
                     <TouchableOpacity
@@ -512,7 +545,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                           onBlur={() => setEditingField(null)}
                         />
                       ) : (
-                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.phone_number || '-'}</Text>
+                        <Text style={[styles.detailValue, { color: colors.text }]}>{user?.phone || '-'}</Text>
                       )}
                     </View>
                     <TouchableOpacity

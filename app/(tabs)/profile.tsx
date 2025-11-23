@@ -182,7 +182,23 @@ export default function ProfilePage() {
   const getCurrentUser = async () => {
     const userData = await sessionStorage.getUser();
     setUser(userData);
-    setUserId(userData?.uid ?? null);
+    setUserId(userData?.id ?? null);
+  };
+
+  const refreshUserDetails = async () => {
+    if (!user?.username) return;
+
+    try {
+      const { getUserDetails } = await import('@/src/api/userService');
+      const result = await getUserDetails(user.username);
+
+      if (result.status === 'success') {
+        await sessionStorage.saveUser(result.user);
+        setUser(result.user);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user details:', error);
+    }
   };
 
   const loadChildPosts = async (postId: string, childPage: number): Promise<Post[]> => {
@@ -277,24 +293,30 @@ export default function ProfilePage() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <View style={styles.topRow}>
-          <View style={styles.profileSection}>
+          <TouchableOpacity
+            style={styles.profileSection}
+            onPress={refreshUserDetails}
+            activeOpacity={0.7}
+          >
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-              {user?.profile_image_url ? (
+              {user?.profile_pic_url ? (
                 <Image
-                  source={{ uri: user.profile_image_url }}
+                  source={{ uri: user.profile_pic_url }}
                   style={styles.avatarImage}
                 />
               ) : (
                 <Text style={[styles.avatarText, { color: theme === 'dark' ? colors.background : '#FFFFFF' }]}>
-                  {user?.identifier?.charAt(0).toUpperCase() || 'U'}
+                  {user?.first_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
                 </Text>
               )}
             </View>
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: colors.text }]}>{user?.firstName || 'Subham'}</Text>
-              <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.uid || 'user'}</Text>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username || 'User'}
+              </Text>
+              <Text style={[styles.userId, { color: colors.textSecondary }]}>@{user?.username || 'user'}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={[styles.statNumber, { color: colors.text }]}>{formatNumber(posts.length)}</Text>

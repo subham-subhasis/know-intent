@@ -4,20 +4,24 @@ const SESSION_KEY = '@intent_session';
 const USER_KEY = '@intent_user';
 
 export interface SessionData {
-  uid: string;
-  session_id: string;
-  identifier: string;
-  profile_id?: string;
+  id: string;
+  username: string;
+  auth_token: string;
   timestamp: number;
 }
 
 export interface UserData {
-  uid: string;
-  identifier: string;
-  profile_id?: string;
-  profile_image_url?: string;
+  id: string;
+  username: string;
   email?: string;
-  phone_number?: string;
+  phone?: string;
+  first_name: string;
+  last_name: string;
+  profile_pic_url?: string;
+  kpis?: string[];
+  gender?: string;
+  date_of_birth?: string;
+  meta?: any;
 }
 
 export const sessionStorage = {
@@ -63,15 +67,15 @@ export const sessionStorage = {
     }
   },
 
-  async updateUserProfileImage(imageUrl: string): Promise<void> {
+  async updateUser(updates: Partial<UserData>): Promise<void> {
     try {
       const user = await this.getUser();
       if (user) {
-        user.profile_image_url = imageUrl;
-        await this.saveUser(user);
+        const updatedUser = { ...user, ...updates };
+        await this.saveUser(updatedUser);
       }
     } catch (error) {
-      console.error('Failed to update profile image:', error);
+      console.error('Failed to update user:', error);
     }
   },
 

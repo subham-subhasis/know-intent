@@ -15,13 +15,14 @@ import {
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { signin, getUserProfile } from '@/src/api/userService';
+import { authSignin, getUserDetails } from '@/src/api/userService';
 import { ErrorToast } from '@/components/ErrorToast';
 import { Info } from 'lucide-react-native';
 import { sessionStorage } from '@/lib/sessionStorage';
 
 export default function LandingPage() {
   const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
@@ -61,58 +62,35 @@ export default function LandingPage() {
   };
 
   const handleLogin = async () => {
-    if (!identifier) return;
+    if (!identifier || !password) return;
 
     setLoading(true);
     setError('');
     setShowError(false);
 
     try {
-      const result = await signin({
+      const result = await authSignin({
         identifier: identifier,
-        otp_verified: true,
+        password: password,
       });
 
-      if (result.ok) {
+      if (result.status === 'success') {
         await sessionStorage.saveSession({
-          uid: result.uid,
-          session_id: result.session_id,
-          identifier: identifier,
+          id: result.user.id,
+          username: result.user.username,
+          auth_token: result.auth_token,
           timestamp: Date.now(),
         });
 
-        try {
-          const profileResult = await getUserProfile({ uid: result.uid });
-          if (profileResult.ok) {
-            await sessionStorage.saveUser({
-              uid: profileResult.uid,
-              identifier: profileResult.identifier,
-              profile_id: profileResult.profile_id,
-              profile_image_url: profileResult.profile_image_url,
-              email: profileResult.email,
-              phone_number: profileResult.phone_number,
-            });
-          } else {
-            await sessionStorage.saveUser({
-              uid: result.uid,
-              identifier: identifier,
-            });
-          }
-        } catch (profileError) {
-          console.error('Failed to fetch user profile:', profileError);
-          await sessionStorage.saveUser({
-            uid: result.uid,
-            identifier: identifier,
-          });
-        }
+        await sessionStorage.saveUser(result.user);
 
         router.replace('/(tabs)');
       } else {
-        setError('Unable to sign in. Please check your username or phone number.');
+        setError('Unable to sign in. Please check your credentials.');
         setShowError(true);
       }
     } catch (err: any) {
-      setError('Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
       setShowError(true);
     } finally {
       setLoading(false);
@@ -163,7 +141,7 @@ export default function LandingPage() {
             <View style={styles.bottomSection}>
               <View style={styles.card}>
                 <View style={styles.inputSection}>
-                  <Text style={styles.inputLabel}>USERNAME OR PHONE NUMBER</Text>
+                  <Text style={styles.inputLabel}>USERNAME / EMAIL / PHONE</Text>
                   <TextInput
                     style={styles.identifierInput}
                     placeholder="Type details here"
@@ -171,6 +149,20 @@ export default function LandingPage() {
                     value={identifier}
                     onChangeText={setIdentifier}
                     keyboardType="default"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+
+                <View style={styles.inputSection}>
+                  <Text style={styles.inputLabel}>PASSWORD</Text>
+                  <TextInput
+                    style={styles.identifierInput}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#D1D5DB"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
@@ -186,9 +178,9 @@ export default function LandingPage() {
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    (loading || !identifier) && styles.buttonDisabled
+                    (loading || !identifier || !password) && styles.buttonDisabled
                   ]}
-                  disabled={loading || !identifier}
+                  disabled={loading || !identifier || !password}
                   onPress={handleLogin}
                   activeOpacity={0.8}
                 >
