@@ -176,7 +176,9 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    getCurrentUser();
+    getCurrentUser().catch(error => {
+      console.error('Failed to load user:', error);
+    });
   }, []);
 
   const getCurrentUser = async () => {
