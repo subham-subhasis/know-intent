@@ -109,7 +109,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadTheme();
+    loadTheme().catch(error => {
+      console.error('Failed to load theme:', error);
+      setIsLoading(false);
+    });
   }, []);
 
   const loadTheme = async () => {

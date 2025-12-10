@@ -29,7 +29,10 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    checkExistingSession();
+    checkExistingSession().catch(error => {
+      console.error('Unexpected error during session check:', error);
+      setLoading(false);
+    });
   }, []);
 
   const checkExistingSession = async () => {
