@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { QueryProvider } from '@/contexts/QueryProvider';
-import '@/lib/amplify';
 
 function RootNavigator() {
   const { theme } = useTheme();
