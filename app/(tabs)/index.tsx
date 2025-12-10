@@ -340,7 +340,9 @@ export default function HomePage() {
         console.error('Error checking viewed status:', error);
       }
     };
-    checkViewedStatus();
+    checkViewedStatus().catch(error => {
+      console.error('Unexpected error checking viewed status:', error);
+    });
   }, []);
 
   useEffect(() => {
