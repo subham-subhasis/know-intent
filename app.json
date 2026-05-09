@@ -17,6 +17,10 @@
         "NSCameraUsageDescription": "Allow this app to use the camera to take photos."
       }
     },
+    "android": {
+      "package": "com.subham47.knowintent",
+      "softwareKeyboardLayoutMode": "resize"
+    },
     "web": {
       "bundler": "metro",
       "output": "single"

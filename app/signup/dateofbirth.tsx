@@ -7,7 +7,7 @@ import {
   ScrollView,
   ImageBackground,
 } from 'react-native';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { signupStorage } from '@/lib/signupStorage';
@@ -31,6 +31,22 @@ export default function DateOfBirthPage() {
     return new Date(year, month + 1, 0).getDate();
   };
 
+  const updateMonth = (month: number) => {
+    const daysInMonth = getDaysInMonth(month, tempYear);
+    setTempMonth(month);
+    if (tempDay > daysInMonth) {
+      setTempDay(daysInMonth);
+    }
+  };
+
+  const updateYear = (year: number) => {
+    const daysInMonth = getDaysInMonth(tempMonth, year);
+    setTempYear(year);
+    if (tempDay > daysInMonth) {
+      setTempDay(daysInMonth);
+    }
+  };
+
   const handleConfirmDate = () => {
     const newDate = new Date(tempYear, tempMonth, tempDay);
     setSelectedDate(newDate);
@@ -47,6 +63,20 @@ export default function DateOfBirthPage() {
 
   const handleBackToLogin = () => {
     router.push('/');
+  };
+
+  const renderPickerColumn = (items: ReactNode[]) => {
+    return (
+      <ScrollView
+        style={styles.pickerColumn}
+        contentContainerStyle={styles.pickerColumnContent}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
+        keyboardShouldPersistTaps="handled"
+      >
+        {items}
+      </ScrollView>
+    );
   };
 
   const renderDayPicker = () => {
@@ -68,29 +98,23 @@ export default function DateOfBirthPage() {
       );
     }
 
-    return (
-      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
-        {days}
-      </ScrollView>
-    );
+    return renderPickerColumn(days);
   };
 
   const renderMonthPicker = () => {
-    return (
-      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
-        {MONTHS.map((month, index) => (
-          <TouchableOpacity
-            key={month}
-            style={[styles.pickerItem, tempMonth === index && styles.pickerItemSelected]}
-            onPress={() => setTempMonth(index)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.pickerItemText, tempMonth === index && styles.pickerItemTextSelected]}>
-              {month}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+    return renderPickerColumn(
+      MONTHS.map((month, index) => (
+        <TouchableOpacity
+          key={month}
+          style={[styles.pickerItem, tempMonth === index && styles.pickerItemSelected]}
+          onPress={() => updateMonth(index)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.pickerItemText, tempMonth === index && styles.pickerItemTextSelected]}>
+            {month}
+          </Text>
+        </TouchableOpacity>
+      ))
     );
   };
 
@@ -103,7 +127,7 @@ export default function DateOfBirthPage() {
         <TouchableOpacity
           key={i}
           style={[styles.pickerItem, tempYear === i && styles.pickerItemSelected]}
-          onPress={() => setTempYear(i)}
+          onPress={() => updateYear(i)}
           activeOpacity={0.7}
         >
           <Text style={[styles.pickerItemText, tempYear === i && styles.pickerItemTextSelected]}>
@@ -113,11 +137,7 @@ export default function DateOfBirthPage() {
       );
     }
 
-    return (
-      <ScrollView style={styles.pickerColumn} showsVerticalScrollIndicator={false}>
-        {years}
-      </ScrollView>
-    );
+    return renderPickerColumn(years);
   };
 
   return (
@@ -139,6 +159,7 @@ export default function DateOfBirthPage() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.card}>
             <View style={styles.titleSection}>
@@ -341,6 +362,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+  },
+  pickerColumnContent: {
+    paddingVertical: 4,
   },
   pickerItem: {
     paddingVertical: 12,

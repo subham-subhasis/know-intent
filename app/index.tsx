@@ -7,15 +7,13 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
   ImageBackground,
   ActivityIndicator,
 } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { authSignin, getUserDetails } from '@/src/api/userService';
+import { authSignin } from '@/src/api/userService';
 import { ErrorToast } from '@/components/ErrorToast';
 import { Info } from 'lucide-react-native';
 import { sessionStorage } from '@/lib/sessionStorage';
@@ -58,10 +56,6 @@ export default function LandingPage() {
 
   const handleOpenPrivacy = () => {
     Linking.openURL('https://intent.app/privacy');
-  };
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
   };
 
   const handleLogin = async () => {
@@ -111,7 +105,6 @@ export default function LandingPage() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ErrorToast
           message={error}
@@ -126,8 +119,8 @@ export default function LandingPage() {
 
         <KeyboardAvoidingView
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
         >
           <View style={styles.header}>
             <View>
@@ -136,14 +129,14 @@ export default function LandingPage() {
             </View>
           </View>
 
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.topSection} />
-
-            <View style={styles.bottomSection}>
+          <View style={styles.contentWrapper}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.card}>
                 <View style={styles.inputSection}>
                   <Text style={styles.inputLabel}>USERNAME / EMAIL / PHONE</Text>
@@ -156,6 +149,7 @@ export default function LandingPage() {
                     keyboardType="default"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    returnKeyType="next"
                   />
                 </View>
 
@@ -170,6 +164,8 @@ export default function LandingPage() {
                     secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
                   />
                 </View>
 
@@ -214,11 +210,10 @@ export default function LandingPage() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </KeyboardAvoidingView>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
@@ -259,25 +254,21 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
+  contentWrapper: {
+    flex: 1,
+    marginTop: Platform.OS === 'ios' ? 120 : 100,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
   scrollContent: {
     flexGrow: 1,
-    minHeight: '100%',
-  },
-  topSection: {
-    flex: 1,
-    minHeight: 300,
+    justifyContent: 'flex-end',
   },
   appName: {
     fontSize: 28,
     fontWeight: '700',
     color: '#1F2937',
     letterSpacing: 2,
-  },
-  bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 20,
-    paddingBottom: 40,
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

@@ -6,13 +6,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
   ImageBackground,
   Animated,
 } from 'react-native';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import countryCodes from '@/assets/json/country-codes.json';
@@ -107,12 +105,7 @@ export default function SignupPage() {
     router.back();
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
           source={require('@/assets/images/intent-bg.png')}
@@ -122,8 +115,8 @@ export default function SignupPage() {
 
         <KeyboardAvoidingView
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
         >
           <View style={styles.header}>
             <View>
@@ -135,7 +128,9 @@ export default function SignupPage() {
           <View style={styles.contentWrapper}>
             <ScrollView
               contentContainerStyle={styles.scrollContent}
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.card}>
@@ -162,6 +157,7 @@ export default function SignupPage() {
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
+                        returnKeyType="next"
                       />
                       {emailAddress ? (
                         <TouchableOpacity
@@ -196,6 +192,7 @@ export default function SignupPage() {
                           keyboardType="phone-pad"
                           autoCapitalize="none"
                           autoCorrect={false}
+                          returnKeyType="done"
                         />
                         {phoneNumber ? (
                           <TouchableOpacity
@@ -280,7 +277,6 @@ export default function SignupPage() {
           </View>
         </KeyboardAvoidingView>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
