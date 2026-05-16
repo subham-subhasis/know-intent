@@ -10,14 +10,16 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Platform,
   Switch,
   ScrollView,
 } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2, UserCircle, Plus } from 'lucide-react-native';
+import { X, DollarSign, Coins, Camera, Image as ImageIcon, Check, Settings as SettingsIcon, Moon, Sun, LogOut, Clock, Edit2, UserCircle, Plus, ChevronRight, Timer, BarChart3 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
-import { updateUser, getUserDetails } from '@/src/api/userService';
+import { appUsageStorage, AppUsageSummary } from '@/lib/appUsageStorage';
+import { updateUser } from '@/src/api/userService';
 import { authService } from '@/services/authService';
 import { useRouter } from 'expo-router';
 import { pickImageFromLibrary, takePhoto } from '@/lib/imagePicker';
@@ -41,6 +43,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showUserDetails, setShowUserDetails] = useState(false);
+  const [showTimeManagement, setShowTimeManagement] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
@@ -49,6 +52,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
   const [availableKpis, setAvailableKpis] = useState<string[]>([]);
   const [showKpiPicker, setShowKpiPicker] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [usageSummary, setUsageSummary] = useState<AppUsageSummary | null>(null);
   const slideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
 
   useEffect(() => {
@@ -69,6 +73,12 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     }
   }, [visible]);
 
+  useEffect(() => {
+    if (showTimeManagement) {
+      loadUsageSummary();
+    }
+  }, [showTimeManagement]);
+
   const loadUser = async () => {
     const userData = await sessionStorage.getUser();
     setUser(userData);
@@ -85,9 +95,27 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
     setAvailableKpis(Object.keys(kpiData));
   };
 
+  const loadUsageSummary = async () => {
+    const summary = await appUsageStorage.getSummary();
+    setUsageSummary(summary);
+  };
+
+  const formatUsageDuration = (milliseconds: number) => {
+    const totalMinutes = Math.round(milliseconds / 60000);
+    if (totalMinutes < 1) return '<1m';
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours === 0) return `${minutes}m`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  };
+
   const handleClose = () => {
     setShowSettings(false);
     setShowUserDetails(false);
+    setShowTimeManagement(false);
     setEditingField(null);
     Animated.timing(slideAnim, {
       toValue: SCREEN_WIDTH,
@@ -324,143 +352,159 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
           </View>
 
           <View style={styles.content}>
-            {!showSettings && !showUserDetails ? (
-              <View style={styles.profileSection}>
-                <TouchableOpacity
-                  style={styles.avatarContainer}
-                  onPress={handleProfilePicturePress}
-                  disabled={uploading}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-                    {user?.profile_pic_url ? (
-                      <Image
-                        source={{ uri: user.profile_pic_url }}
-                        style={styles.avatarImage}
-                      />
-                    ) : (
-                      <Text style={[styles.avatarText, { color: colors.background }]}>
-                        {user?.first_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
-                      </Text>
-                    )}
-                  </View>
-                  <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
-                    {uploading ? (
-                      <ActivityIndicator size="small" color={colors.background} />
-                    ) : (
-                      <Camera size={16} color={colors.background} strokeWidth={2} />
-                    )}
-                  </View>
-                </TouchableOpacity>
+            {!showSettings && !showUserDetails && !showTimeManagement ? (
+              <ScrollView
+                style={styles.profileScroll}
+                contentContainerStyle={styles.profileSection}
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.profileSummary}>
+                  <TouchableOpacity
+                    style={styles.avatarContainer}
+                    onPress={handleProfilePicturePress}
+                    disabled={uploading}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.avatar, { backgroundColor: colors.primary, borderColor: colors.background }]}>
+                      {user?.profile_pic_url ? (
+                        <Image
+                          source={{ uri: user.profile_pic_url }}
+                          style={styles.avatarImage}
+                        />
+                      ) : (
+                        <Text style={[styles.avatarText, { color: colors.background }]}>
+                          {user?.first_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={[styles.cameraOverlay, { backgroundColor: colors.primary, borderColor: colors.background }]}>
+                      {uploading ? (
+                        <ActivityIndicator size="small" color={colors.background} />
+                      ) : (
+                        <Camera size={15} color={colors.background} strokeWidth={2} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
 
-                <View style={styles.greetingSection}>
-                  {isEditingUID ? (
-                    <View style={styles.greetingEditContainer}>
-                      <TextInput
-                        style={[
-                          styles.greetingInput,
-                          {
-                            color: colors.text,
-                            backgroundColor: colors.surface,
-                            borderColor: colors.border,
-                          }
-                        ]}
-                        value={newUID}
-                        onChangeText={setNewUID}
-                        autoFocus
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                      <TouchableOpacity
-                        style={[styles.actionButton, { backgroundColor: '#10B981' }]}
-                        onPress={handleSaveUID}
-                        disabled={updating}
-                        activeOpacity={0.7}
-                      >
-                        {updating ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View style={styles.greetingRow}>
-                      <Text style={[styles.greetingText, { color: colors.text }]}>
-                        Namaste! <Text style={styles.greetingName}>{user?.username || 'User'}</Text>
-                      </Text>
-                      <TouchableOpacity onPress={handleEditUID} activeOpacity={0.7}>
-                        <Edit2 size={16} color={colors.icon} strokeWidth={2} />
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                  <View style={styles.greetingSection}>
+                    <Text style={[styles.profileEyebrow, { color: colors.textSecondary }]}>Signed in as</Text>
+                    {isEditingUID ? (
+                      <View style={styles.greetingEditContainer}>
+                        <TextInput
+                          style={[
+                            styles.greetingInput,
+                            {
+                              color: colors.text,
+                              backgroundColor: colors.surface,
+                              borderColor: colors.border,
+                            }
+                          ]}
+                          value={newUID}
+                          onChangeText={setNewUID}
+                          autoFocus
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                        />
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+                          onPress={handleSaveUID}
+                          disabled={updating}
+                          activeOpacity={0.7}
+                        >
+                          {updating ? (
+                            <ActivityIndicator size="small" color="#FFFFFF" />
+                          ) : (
+                            <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.greetingRow}>
+                        <Text style={[styles.greetingName, { color: colors.text }]} numberOfLines={1}>
+                          {user?.username || 'User'}
+                        </Text>
+                        <TouchableOpacity
+                          style={[styles.inlineIconButton, { backgroundColor: colors.surface }]}
+                          onPress={handleEditUID}
+                          activeOpacity={0.7}
+                        >
+                          <Edit2 size={14} color={colors.icon} strokeWidth={2} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    <Text style={[styles.greetingText, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {user?.first_name || user?.last_name ? `${user?.first_name || ''} ${user?.last_name || ''}`.trim() : 'Namaste!'}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.earningsRow}>
-                  <View style={styles.earningItem}>
+                  <View style={[styles.earningItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                     <DollarSign size={18} color="#10B981" strokeWidth={2.5} />
-                    <Text style={[styles.earningText, { color: colors.text }]}>
-                      <Text style={styles.earningValue}>0</Text>
-                      <Text style={[styles.earningLabel, { color: colors.textSecondary }]}> Earned</Text>
-                    </Text>
+                    <View>
+                      <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
+                      <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Earned</Text>
+                    </View>
                   </View>
 
-                  <View style={styles.earningItem}>
+                  <View style={[styles.earningItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                     <Coins size={18} color="#F59E0B" strokeWidth={2.5} />
-                    <Text style={[styles.earningText, { color: colors.text }]}>
-                      <Text style={styles.earningValue}>0</Text>
-                      <Text style={[styles.earningLabel, { color: colors.textSecondary }]}> Intent Coins</Text>
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.infoSection}>
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>EMAIL</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{user?.email || '-'}</Text>
-                  </View>
-
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>PHONE NUMBER</Text>
-                    <View style={styles.infoValueContainer}>
-                      <Text style={[styles.infoValue, { color: colors.text }]}>{user?.phone || '-'}</Text>
-                      <TouchableOpacity activeOpacity={0.7}>
-                        <Edit2 size={14} color={colors.icon} strokeWidth={2} />
-                      </TouchableOpacity>
+                    <View>
+                      <Text style={[styles.earningValue, { color: colors.text }]}>0</Text>
+                      <Text style={[styles.earningLabel, { color: colors.textSecondary }]}>Intent Coins</Text>
                     </View>
                   </View>
                 </View>
 
-                <View style={[styles.separator, { backgroundColor: colors.border }]} />
-
-                <View style={styles.menuSection}>
+                <View style={[styles.menuSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <TouchableOpacity
-                    style={styles.menuItem}
+                    style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
                     activeOpacity={0.7}
                   >
-                    <Clock size={20} color={colors.icon} strokeWidth={2} />
+                    <View style={styles.menuIconContainer}>
+                      <Clock size={20} color={colors.icon} strokeWidth={2} />
+                    </View>
                     <Text style={[styles.menuItemText, { color: colors.text }]}>History</Text>
+                    <ChevronRight size={17} color={colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.menuItem}
+                    style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
                     onPress={() => setShowUserDetails(true)}
                     activeOpacity={0.7}
                   >
-                    <UserCircle size={20} color={colors.icon} strokeWidth={2} />
-                    <Text style={[styles.menuItemText, { color: colors.text }]}>User Details</Text>
+                    <View style={styles.menuIconContainer}>
+                      <UserCircle size={20} color={colors.icon} strokeWidth={2} />
+                    </View>
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>User Management</Text>
+                    <ChevronRight size={17} color={colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.menuItem}
+                    style={[styles.menuItem, { borderBottomColor: colors.borderLight }]}
+                    onPress={() => setShowTimeManagement(true)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.menuIconContainer}>
+                      <Timer size={20} color={colors.icon} strokeWidth={2} />
+                    </View>
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>Time Management</Text>
+                    <ChevronRight size={17} color={colors.textSecondary} strokeWidth={2} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.menuItemLast}
                     onPress={() => setShowSettings(true)}
                     activeOpacity={0.7}
                   >
-                    <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
+                    <View style={styles.menuIconContainer}>
+                      <SettingsIcon size={20} color={colors.icon} strokeWidth={2} />
+                    </View>
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Settings</Text>
+                    <ChevronRight size={17} color={colors.textSecondary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
-              </View>
+              </ScrollView>
             ) : showUserDetails ? (
               <ScrollView style={styles.detailsPage}>
                 <TouchableOpacity
@@ -470,11 +514,8 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                 >
                   <Text style={[styles.backText, { color: colors.primary }]}>{'←'} Back</Text>
                 </TouchableOpacity>
-
-                <Text style={[styles.settingsTitle, { color: colors.text }]}>User Details</Text>
-
-                <View style={styles.detailsSection}>
-                  <View style={styles.detailRow}>
+                <View style={[styles.detailsSection, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.detailRow, { borderBottomColor: colors.borderLight }]}>
                     <View style={styles.detailLeft}>
                       <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>FULL NAME</Text>
                       {editingField === 'name' ? (
@@ -503,7 +544,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View style={[styles.detailRow, { borderBottomColor: colors.borderLight }]}>
                     <View style={styles.detailLeft}>
                       <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>EMAIL</Text>
                       {editingField === 'email' ? (
@@ -532,7 +573,7 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View style={styles.detailRowLast}>
                     <View style={styles.detailLeft}>
                       <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>PHONE NUMBER</Text>
                       {editingField === 'phone' ? (
@@ -561,8 +602,6 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                   </View>
                 </View>
 
-                <View style={[styles.separator, { backgroundColor: colors.border }]} />
-
                 <View style={styles.kpiSection}>
                   <Text style={[styles.sectionTitle, { color: colors.text }]}>Primary Interests</Text>
                   <View style={styles.kpiList}>
@@ -583,6 +622,78 @@ export function ProfileSlider({ visible, onClose }: ProfileSliderProps) {
                     <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
                     <Text style={styles.addKpiText}>Add Interest</Text>
                   </TouchableOpacity>
+                </View>
+              </ScrollView>
+            ) : showTimeManagement ? (
+              <ScrollView
+                style={styles.detailsPage}
+                contentContainerStyle={styles.timeManagementContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setShowTimeManagement(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.backText, { color: colors.primary }]}>{'←'} Back</Text>
+                </TouchableOpacity>
+
+                <Text style={[styles.settingsTitle, { color: colors.text }]}>Time Management</Text>
+
+                <View style={[styles.usageHero, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={styles.usageHeroHeader}>
+                    <View style={[styles.usageIconBubble, { backgroundColor: colors.background }]}>
+                      <Timer size={22} color={colors.icon} strokeWidth={2} />
+                    </View>
+                    <Text style={[styles.usageHeroLabel, { color: colors.textSecondary }]}>Today</Text>
+                  </View>
+                  <Text style={[styles.usageHeroValue, { color: colors.text }]}>
+                    {formatUsageDuration(usageSummary?.today.milliseconds || 0)}
+                  </Text>
+                  <Text style={[styles.usageHeroSubtext, { color: colors.textSecondary }]}>
+                    Weekly average: {formatUsageDuration(usageSummary?.weekAverage.milliseconds || 0)}
+                  </Text>
+                </View>
+
+                <View style={[styles.usageList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  {[
+                    usageSummary?.today,
+                    usageSummary?.yesterday,
+                    usageSummary?.twoDaysAgo,
+                    usageSummary?.weekAverage,
+                  ].filter(Boolean).map((item) => {
+                    const maxUsage = Math.max(...(usageSummary?.days.map(day => day.milliseconds) || [1]), usageSummary?.weekAverage.milliseconds || 1, 1);
+                    const progress = Math.max(0.06, (item!.milliseconds || 0) / maxUsage);
+
+                    return (
+                      <View key={item!.key} style={[styles.usageRow, { borderBottomColor: colors.borderLight }]}>
+                        <View style={styles.usageRowTop}>
+                          <Text style={[styles.usageLabel, { color: colors.text }]}>{item!.label}</Text>
+                          <Text style={[styles.usageValue, { color: colors.textSecondary }]}>
+                            {formatUsageDuration(item!.milliseconds)}
+                          </Text>
+                        </View>
+                        <View style={[styles.usageTrack, { backgroundColor: colors.borderLight }]}>
+                          <View
+                            style={[
+                              styles.usageFill,
+                              {
+                                width: `${Math.min(progress * 100, 100)}%`,
+                                backgroundColor: item!.key === 'week-average' ? '#F59E0B' : colors.primary,
+                              },
+                            ]}
+                          />
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+
+                <View style={[styles.usageHint, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <BarChart3 size={18} color={colors.icon} strokeWidth={2} />
+                  <Text style={[styles.usageHintText, { color: colors.textSecondary }]}>
+                    Usage is measured while the app is open and active on this device.
+                  </Text>
                 </View>
               </ScrollView>
             ) : showSettings ? (
@@ -739,8 +850,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === 'ios' ? 44 : 20,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -758,48 +869,56 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  profileScroll: {
+    flex: 1,
+  },
   profileSection: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 24,
+  },
+  profileSummary: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 14,
+    width: '100%',
+    marginBottom: 14,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
   },
   avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   avatarText: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   cameraOverlay: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    bottom: -1,
+    right: -1,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#1F2937',
     justifyContent: 'center',
     alignItems: 'center',
@@ -812,22 +931,29 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   greetingSection: {
-    width: '100%',
-    marginBottom: 12,
-    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+  },
+  profileEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 3,
+    textTransform: 'uppercase',
   },
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   greetingText: {
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: 13,
+    fontWeight: '500',
     color: '#1F2937',
+    marginTop: 2,
   },
   greetingName: {
-    fontSize: 18,
+    flex: 1,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
   },
@@ -839,31 +965,39 @@ const styles = StyleSheet.create({
   },
   greetingInput: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
     textAlign: 'center',
   },
+  inlineIconButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   earningsRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 12,
     width: '100%',
   },
   earningItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  earningText: {
-    fontSize: 15,
-    fontWeight: '400',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
   },
   earningValue: {
     fontSize: 16,
@@ -871,16 +1005,21 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   earningLabel: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: 11,
+    fontWeight: '600',
     color: '#6B7280',
+    marginTop: 1,
   },
   infoSection: {
     width: '100%',
-    gap: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   infoRow: {
     width: '100%',
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   infoLabel: {
     fontSize: 11,
@@ -896,7 +1035,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   infoValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
     flex: 1,
@@ -913,28 +1052,39 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     backgroundColor: '#E5E7EB',
-    marginVertical: 16,
+    marginVertical: 14,
   },
   menuSection: {
     width: '100%',
-    gap: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: 12,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 48,
     gap: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+  },
+  menuItemLast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    gap: 12,
+    paddingHorizontal: 14,
   },
   menuItemText: {
-    fontSize: 15,
+    flex: 1,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
   },
   menuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1073,35 +1223,52 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   detailsPage: {
-    padding: 24,
+    paddingHorizontal: 16,
+    paddingTop: 18,
   },
   detailsSection: {
-    gap: 20,
-    marginBottom: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: 18,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 54,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    gap: 12,
+  },
+  detailRowLast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 54,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 12,
   },
   detailLeft: {
     flex: 1,
+    minWidth: 0,
   },
   detailLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: '#6B7280',
-    marginBottom: 6,
+    marginBottom: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
   },
   detailInput: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
@@ -1113,6 +1280,7 @@ const styles = StyleSheet.create({
   },
   kpiSection: {
     gap: 16,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
@@ -1156,6 +1324,91 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  timeManagementContent: {
+    paddingBottom: 24,
+  },
+  usageHero: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 12,
+  },
+  usageHeroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  usageIconBubble: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  usageHeroLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  usageHeroValue: {
+    fontSize: 34,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  usageHeroSubtext: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  usageList: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  usageRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  usageRowTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 8,
+  },
+  usageLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  usageValue: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  usageTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  usageFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  usageHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginTop: 12,
+  },
+  usageHintText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '500',
   },
   kpiPickerOverlay: {
     position: 'absolute',

@@ -4,9 +4,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { QueryProvider } from '@/contexts/QueryProvider';
+import { appUsageStorage } from '@/lib/appUsageStorage';
 
 function RootNavigator() {
   const { theme } = useTheme();
+
+  useEffect(() => {
+    const stopTracking = appUsageStorage.startTracking();
+    return stopTracking;
+  }, []);
 
   return (
     <>

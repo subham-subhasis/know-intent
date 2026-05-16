@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
-  ScrollView,
   Image,
 } from 'react-native';
 import { Grid3x3, Network, ArrowLeft, UserPlus, UserCheck } from 'lucide-react-native';
@@ -265,7 +264,7 @@ export default function UserProfilePage() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <View style={styles.content}>
 
         <View style={[styles.viewModeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity
@@ -324,7 +323,7 @@ export default function UserProfilePage() {
             onLoadChildPosts={loadChildPosts}
           />
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 }

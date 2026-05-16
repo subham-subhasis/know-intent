@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Modal,
   Image,
-  ScrollView,
 } from 'react-native';
 import { Grid3x3, Network, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -332,7 +331,7 @@ export default function ProfilePage() {
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
+      <View style={styles.content}>
         <View style={[styles.viewModeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity
             style={[
@@ -395,7 +394,7 @@ export default function ProfilePage() {
             isLoading={isLoading}
           />
         )}
-      </ScrollView>
+      </View>
 
       <TouchableOpacity
         style={[styles.floatingButton, { backgroundColor: colors.primary }]}

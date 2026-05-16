@@ -97,6 +97,8 @@ export default function LandingPage() {
       setShowError(true);
     } finally {
       setLoading(false);
+      //TODO: Dont forgett to remove this below code
+      router.replace('/(tabs)');
     }
   };
 
