@@ -6,13 +6,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
   ImageBackground,
   Animated,
 } from 'react-native';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { signupStorage } from '@/lib/signupStorage';
@@ -62,10 +60,6 @@ export default function PasswordPage() {
     router.push('/');
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   const handleClearPassword = () => {
     spinValuePassword.setValue(0);
     Animated.timing(spinValuePassword, {
@@ -103,7 +97,6 @@ export default function PasswordPage() {
   });
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <ImageBackground
           source={require('@/assets/images/intent-bg.png')}
@@ -113,8 +106,8 @@ export default function PasswordPage() {
 
         <KeyboardAvoidingView
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
         >
           <View style={styles.header}>
             <View>
@@ -126,7 +119,9 @@ export default function PasswordPage() {
           <View style={styles.contentWrapper}>
             <ScrollView
               contentContainerStyle={styles.scrollContent}
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.card}>
@@ -149,6 +144,9 @@ export default function PasswordPage() {
                       secureTextEntry
                       autoCapitalize="none"
                       autoCorrect={false}
+                      autoComplete="new-password"
+                      textContentType="newPassword"
+                      returnKeyType="next"
                     />
                     {password ? (
                       <TouchableOpacity
@@ -175,6 +173,10 @@ export default function PasswordPage() {
                       secureTextEntry
                       autoCapitalize="none"
                       autoCorrect={false}
+                      autoComplete="off"
+                      textContentType="none"
+                      returnKeyType="done"
+                      onSubmitEditing={handleNext}
                     />
                     {confirmPassword ? (
                       <TouchableOpacity
@@ -217,7 +219,6 @@ export default function PasswordPage() {
           </View>
         </KeyboardAvoidingView>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '500',
     color: '#1F2937',
-    textAlign: 'center',
+    textAlign: 'left',
     paddingVertical: 16,
     paddingHorizontal: 44,
     borderWidth: 2,
