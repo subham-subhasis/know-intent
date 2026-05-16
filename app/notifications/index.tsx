@@ -18,6 +18,7 @@ import { fetchNotifications } from '@/services/notificationService';
 import { NotificationSkeleton } from '@/components/NotificationSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorToast } from '@/components/ErrorToast';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 type NotificationType = 'like' | 'comment' | 'intent_chain' | 'follow' | 'mention';
 
@@ -225,6 +226,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <EdgeSwipeBack onBack={() => router.back()} />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}

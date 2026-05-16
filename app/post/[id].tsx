@@ -11,9 +11,10 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ThumbsUp, ThumbsDown, X, ArrowUp } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, ChevronLeft, ArrowUp } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import MediaCarousel from '@/components/MediaCarousel';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 const { width, height } = Dimensions.get('window');
 
@@ -340,19 +341,42 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>Post not found</Text>
+        <View style={styles.notFoundContainer}>
+          <Text style={[styles.errorText, { color: colors.text }]}>Post not found</Text>
+          <TouchableOpacity
+            style={[styles.notFoundButton, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(tabs)');
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.notFoundButtonText,
+                { color: theme === 'dark' ? colors.background : '#FFFFFF' },
+              ]}
+            >
+              Go Back
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <EdgeSwipeBack onBack={() => router.back()} />
       <TouchableOpacity
         style={[styles.closeButton, { backgroundColor: colors.surface }]}
         onPress={() => router.back()}
         activeOpacity={0.8}
       >
-        <X size={24} color={colors.text} strokeWidth={2} />
+        <ChevronLeft size={22} color={colors.text} strokeWidth={2.5} />
       </TouchableOpacity>
 
       <ScrollView
@@ -367,7 +391,7 @@ export default function PostDetailPage() {
           <MediaCarousel
             media={post.media}
             width={width}
-            height={height * 0.6}
+            height={height * 0.42}
             showIndicators={post.media.length > 1}
             borderRadius={0}
           />
@@ -537,9 +561,9 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 60 : 40,
     left: 20,
     zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -563,15 +587,15 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 60 : 40,
     right: 20,
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 24,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -580,31 +604,34 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   actionButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#1F2937',
   },
   contentSection: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 12,
-    lineHeight: 32,
+    marginBottom: 8,
+    lineHeight: 28,
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
     color: '#6B7280',
-    marginBottom: 16,
-    lineHeight: 24,
+    marginBottom: 12,
+    lineHeight: 22,
   },
   stats: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
-    marginBottom: 24,
+    marginBottom: 18,
   },
   statText: {
     fontSize: 14,
@@ -612,16 +639,16 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   intentChainContainer: {
-    gap: 16,
+    gap: 12,
   },
   intentChainTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   childPostCard: {
-    marginBottom: 20,
+    marginBottom: 12,
     borderRadius: 12,
     backgroundColor: '#F9FAFB',
     overflow: 'hidden',
@@ -631,17 +658,17 @@ const styles = StyleSheet.create({
   },
   childActionButtons: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 12,
+    right: 12,
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   childActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     shadowColor: '#000',
@@ -651,25 +678,27 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   childActionButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#1F2937',
   },
   childPostInfo: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
   },
   childPostTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 8,
-    lineHeight: 24,
+    marginBottom: 6,
+    lineHeight: 23,
   },
   childPostDescription: {
     fontSize: 14,
     fontWeight: '500',
     color: '#6B7280',
-    lineHeight: 20,
+    lineHeight: 19,
   },
   loadingContainer: {
     padding: 20,
@@ -721,6 +750,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 100,
+  },
+  notFoundContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    gap: 16,
+  },
+  notFoundButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  notFoundButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

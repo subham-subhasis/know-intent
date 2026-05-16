@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import GridView from '@/components/GridView';
 import SpiderWebView from '@/components/SpiderWebView';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 type ViewMode = 'grid' | 'spider';
 
@@ -218,6 +219,7 @@ export default function UserProfilePage() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <EdgeSwipeBack onBack={() => router.back()} />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
