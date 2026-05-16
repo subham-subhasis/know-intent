@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Send } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 const { height } = Dimensions.get('window');
 
@@ -197,6 +198,7 @@ export default function ChatConversationScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
+      <EdgeSwipeBack onBack={() => router.back()} />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}

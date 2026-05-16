@@ -13,6 +13,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { sessionStorage } from '@/lib/sessionStorage';
 import { useState } from 'react';
 import { ProfileSlider } from '@/components/ProfileSlider';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 const MENU_ITEMS = [
   { id: '1', icon: Bookmark, label: 'Saved Videos', count: '12' },
@@ -42,6 +43,7 @@ export default function SettingsPage() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <EdgeSwipeBack onBack={() => router.back()} />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}

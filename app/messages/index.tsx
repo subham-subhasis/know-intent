@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } f
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Circle } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
 
 interface Conversation {
   id: string;
@@ -141,6 +142,7 @@ export default function MessagesListScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <EdgeSwipeBack onBack={() => router.back()} />
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.borderLight }]}>
         <TouchableOpacity
           style={styles.backButton}
