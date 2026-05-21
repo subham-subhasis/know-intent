@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Alert,
 } from 'react-native';
 import { X, Upload, Image, Video, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { showImagePickerOptions, pickVideoFromLibrary, PickedAsset } from '@/lib/imagePicker';
+import { getUploadUserMessage, uploadAsset } from '@/services/uploadService';
+import { authService } from '@/services/authService';
 
 interface UploadModalProps {
   onClose: () => void;
@@ -38,7 +41,9 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   const [showCustomKPI, setShowCustomKPI] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<PickedAsset | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { colors, theme } = useTheme();
+  const canSubmit = Boolean(mediaType && selectedMedia && description.trim() && (selectedKPI || customKPI.trim()));
 
   const handleMediaSelect = async () => {
     if (!mediaType) return;
@@ -64,8 +69,37 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   };
 
   const handleUpload = () => {
-    console.log('Upload:', { description, selectedKPI, customKPI, mediaType, selectedMedia });
-    onClose();
+    (async () => {
+      if (!selectedMedia) {
+        Alert.alert('Choose a file', 'Please select an image or video before uploading.');
+        return;
+      }
+
+      try {
+        const userId = await authService.getUserId();
+        // if (!userId) {
+        //   Alert.alert('Not signed in', 'Please sign in before uploading.');
+        //   return;
+        // }
+
+        setIsUploading(true);
+
+        await uploadAsset(selectedMedia, 'subham470', {
+          title: '',
+          description: description.trim(),
+          declaredKpis: selectedKPI ? [selectedKPI] : customKPI.trim() ? [customKPI.trim()] : [],
+          language: 'en',
+        });
+
+        Alert.alert('Upload complete', 'Your content was uploaded successfully.');
+        onClose();
+      } catch (err: any) {
+        console.error('Upload failed', err);
+        Alert.alert('Upload failed', getUploadUserMessage(err));
+      } finally {
+        setIsUploading(false);
+      }
+    })();
   };
 
   return (
@@ -92,7 +126,10 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
                 styles.mediaTypeButton,
                 { borderColor: colors.border, backgroundColor: mediaType === 'image' ? colors.primary : colors.surface },
               ]}
-              onPress={() => setMediaType('image')}
+              onPress={() => {
+                setMediaType('image');
+                setSelectedMedia(null);
+              }}
               activeOpacity={0.7}
             >
               <Image
@@ -115,7 +152,10 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
                 styles.mediaTypeButton,
                 { borderColor: colors.border, backgroundColor: mediaType === 'video' ? colors.primary : colors.surface },
               ]}
-              onPress={() => setMediaType('video')}
+              onPress={() => {
+                setMediaType('video');
+                setSelectedMedia(null);
+              }}
               activeOpacity={0.7}
             >
               <Video
@@ -245,26 +285,28 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         <TouchableOpacity
           style={[
             styles.uploadButton,
-            (!mediaType || !description || (!selectedKPI && !customKPI)) &&
+            (!canSubmit || isUploading) &&
               styles.uploadButtonDisabled,
           ]}
           onPress={handleUpload}
           activeOpacity={0.8}
-          disabled={!mediaType || !description || (!selectedKPI && !customKPI)}
+          disabled={!canSubmit || isUploading}
         >
           <LinearGradient
             colors={
-              mediaType && description && (selectedKPI || customKPI)
-                ? colors.gradient
+              canSubmit
+                ? (colors.gradient as [string, string])
                 : theme === 'dark'
-                  ? ['#2A2A2A', '#1A1A1A']
-                  : ['#D1D5DB', '#9CA3AF']
+                  ? ['#2A2A2A', '#1A1A1A'] as [string, string]
+                  : ['#D1D5DB', '#9CA3AF'] as [string, string]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.uploadButtonGradient}
           >
-            <Text style={[styles.uploadButtonText, { color: (mediaType && description && (selectedKPI || customKPI)) ? '#FFFFFF' : colors.buttonDisabledText }]}>Upload</Text>
+            <Text style={[styles.uploadButtonText, { color: canSubmit ? '#FFFFFF' : colors.buttonDisabledText }]}>
+              {isUploading ? 'Uploading...' : 'Upload'}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
