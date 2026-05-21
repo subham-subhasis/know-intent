@@ -9,6 +9,7 @@ export interface PickedAsset {
   width?: number;
   height?: number;
   fileSize?: number;
+  duration?: number | null;
 }
 
 export interface ImagePickerOptions {
@@ -64,6 +65,7 @@ export async function pickImageFromLibrary(
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
+      duration: asset.duration,
     };
   } catch (error) {
     console.error('Error picking image from library:', error);
@@ -71,6 +73,57 @@ export async function pickImageFromLibrary(
       Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
     return null;
+  }
+}
+
+/**
+ * Pick multiple images from the device's media library
+ * @param options Configuration options for the image picker
+ * @returns The picked image assets or an empty array if cancelled/failed
+ */
+export async function pickImagesFromLibrary(
+  options: ImagePickerOptions = {}
+): Promise<PickedAsset[]> {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      if (Platform.OS !== 'web') {
+        Alert.alert(
+          'Permission needed',
+          'Photo library permission is required to pick images.'
+        );
+      }
+      return [];
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: options.quality ?? 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+    });
+
+    if (result.canceled) {
+      return [];
+    }
+
+    return result.assets.map((asset, index) => ({
+      uri: asset.uri,
+      fileName: asset.fileName || `image_${Date.now()}_${index + 1}.jpg`,
+      type: asset.type || 'image',
+      width: asset.width,
+      height: asset.height,
+      fileSize: asset.fileSize,
+      duration: asset.duration,
+    }));
+  } catch (error) {
+    console.error('Error picking images from library:', error);
+    if (Platform.OS !== 'web') {
+      Alert.alert('Error', 'Failed to pick images. Please try again.');
+    }
+    return [];
   }
 }
 
@@ -118,6 +171,7 @@ export async function takePhoto(
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
+      duration: asset.duration,
     };
   } catch (error) {
     console.error('Error taking photo:', error);
@@ -172,6 +226,7 @@ export async function pickVideoFromLibrary(
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
+      duration: asset.duration,
     };
   } catch (error) {
     console.error('Error picking video from library:', error);

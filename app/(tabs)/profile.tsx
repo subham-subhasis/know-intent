@@ -5,15 +5,13 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
-  Modal,
   Image,
 } from 'react-native';
-import { Grid3x3, Network, Plus } from 'lucide-react-native';
+import { Grid3x3, Network } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import GridView from '@/components/GridView';
 import SpiderWebView from '@/components/SpiderWebView';
-import { UploadModal } from '@/components/UploadModal';
 import { sessionStorage } from '@/lib/sessionStorage';
 
 type ViewMode = 'grid' | 'spider';
@@ -168,10 +166,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const { colors, theme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [posts, setPosts] = useState<Post[]>(DUMMY_POSTS);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [posts] = useState<Post[]>(DUMMY_POSTS);
+  const isLoading = false;
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -183,7 +179,6 @@ export default function ProfilePage() {
   const getCurrentUser = async () => {
     const userData = await sessionStorage.getUser();
     setUser(userData);
-    setUserId(userData?.id ?? null);
   };
 
   const refreshUserDetails = async () => {
@@ -395,23 +390,6 @@ export default function ProfilePage() {
           />
         )}
       </View>
-
-      <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-        onPress={() => setShowUploadModal(true)}
-        activeOpacity={0.8}
-      >
-        <Plus size={28} color={theme === 'dark' ? colors.background : '#FFFFFF'} strokeWidth={2.5} />
-      </TouchableOpacity>
-
-      <Modal
-        visible={showUploadModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowUploadModal(false)}
-      >
-        <UploadModal onClose={() => setShowUploadModal(false)} />
-      </Modal>
     </View>
   );
 }
@@ -517,21 +495,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#6B7280',
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 100 : 80,
-    right: 20,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#1F2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
 });
