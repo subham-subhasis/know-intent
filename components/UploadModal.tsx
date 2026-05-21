@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Alert,
 } from 'react-native';
-import { X, Upload, Image, Video, Plus } from 'lucide-react-native';
+import { X, Upload, Image, Video, Plus, Bold, Italic, Strikethrough, Code2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { showImagePickerOptions, pickVideoFromLibrary, PickedAsset } from '@/lib/imagePicker';
+import { getUploadUserMessage, uploadAsset } from '@/services/uploadService';
+import { authService } from '@/services/authService';
 
 interface UploadModalProps {
   onClose: () => void;
@@ -38,7 +41,10 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   const [showCustomKPI, setShowCustomKPI] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<PickedAsset | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [textSelection, setTextSelection] = useState({ start: 0, end: 0 });
   const { colors, theme } = useTheme();
+  const canSubmit = Boolean(mediaType && selectedMedia && description.trim() && (selectedKPI || customKPI.trim()));
 
   const handleMediaSelect = async () => {
     if (!mediaType) return;
@@ -64,8 +70,53 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
   };
 
   const handleUpload = () => {
-    console.log('Upload:', { description, selectedKPI, customKPI, mediaType, selectedMedia });
-    onClose();
+    (async () => {
+      if (!selectedMedia) {
+        Alert.alert('Choose a file', 'Please select an image or video before uploading.');
+        return;
+      }
+
+      try {
+        const userId = await authService.getUserId();
+        if (!userId) {
+          Alert.alert('Not signed in', 'Please sign in before uploading.');
+          return;
+        }
+
+        setIsUploading(true);
+
+        await uploadAsset(selectedMedia, userId, {
+          title: '',
+          description: description.trim(),
+          declaredKpis: selectedKPI ? [selectedKPI] : customKPI.trim() ? [customKPI.trim()] : [],
+          language: 'en',
+        });
+
+        Alert.alert('Upload complete', 'Your content was uploaded successfully.');
+        onClose();
+      } catch (err: any) {
+        console.error('Upload failed', err);
+        Alert.alert('Upload failed', getUploadUserMessage(err));
+      } finally {
+        setIsUploading(false);
+      }
+    })();
+  };
+
+  const applyTextFormat = (prefix: string, suffix = prefix) => {
+    const start = textSelection.start;
+    const end = textSelection.end;
+    const selectedText = description.slice(start, end);
+    const before = description.slice(0, start);
+    const after = description.slice(end);
+    const formattedText = `${prefix}${selectedText}${suffix}`;
+    const nextDescription = `${before}${formattedText}${after}`;
+    const cursorPosition = selectedText
+      ? start + formattedText.length
+      : start + prefix.length;
+
+    setDescription(nextDescription);
+    setTextSelection({ start: cursorPosition, end: cursorPosition });
   };
 
   return (
@@ -92,7 +143,10 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
                 styles.mediaTypeButton,
                 { borderColor: colors.border, backgroundColor: mediaType === 'image' ? colors.primary : colors.surface },
               ]}
-              onPress={() => setMediaType('image')}
+              onPress={() => {
+                setMediaType('image');
+                setSelectedMedia(null);
+              }}
               activeOpacity={0.7}
             >
               <Image
@@ -115,7 +169,10 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
                 styles.mediaTypeButton,
                 { borderColor: colors.border, backgroundColor: mediaType === 'video' ? colors.primary : colors.surface },
               ]}
-              onPress={() => setMediaType('video')}
+              onPress={() => {
+                setMediaType('video');
+                setSelectedMedia(null);
+              }}
               activeOpacity={0.7}
             >
               <Video
@@ -153,17 +210,50 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         )}
 
         <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
-          <TextInput
-            style={[styles.textArea, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
-            placeholder="Describe your content..."
-            placeholderTextColor={colors.textTertiary}
-            multiline
-            numberOfLines={4}
-            value={description}
-            onChangeText={setDescription}
-            textAlignVertical="top"
-          />
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Message</Text>
+          <View style={[styles.messageComposer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <View style={[styles.messageToolbar, { borderBottomColor: colors.borderLight }]}>
+              <TouchableOpacity
+                style={styles.formatButton}
+                onPress={() => applyTextFormat('*')}
+                activeOpacity={0.7}
+              >
+                <Bold size={18} color={colors.icon} strokeWidth={2.3} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.formatButton}
+                onPress={() => applyTextFormat('_')}
+                activeOpacity={0.7}
+              >
+                <Italic size={18} color={colors.icon} strokeWidth={2.3} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.formatButton}
+                onPress={() => applyTextFormat('~')}
+                activeOpacity={0.7}
+              >
+                <Strikethrough size={18} color={colors.icon} strokeWidth={2.3} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.formatButton}
+                onPress={() => applyTextFormat('`')}
+                activeOpacity={0.7}
+              >
+                <Code2 size={18} color={colors.icon} strokeWidth={2.3} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={[styles.messageInput, { color: colors.text }]}
+              placeholder="Message..."
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              value={description}
+              onChangeText={setDescription}
+              selection={textSelection}
+              onSelectionChange={(event) => setTextSelection(event.nativeEvent.selection)}
+              textAlignVertical="top"
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -245,26 +335,28 @@ export function UploadModal({ onClose, parentVideoId }: UploadModalProps) {
         <TouchableOpacity
           style={[
             styles.uploadButton,
-            (!mediaType || !description || (!selectedKPI && !customKPI)) &&
+            (!canSubmit || isUploading) &&
               styles.uploadButtonDisabled,
           ]}
           onPress={handleUpload}
           activeOpacity={0.8}
-          disabled={!mediaType || !description || (!selectedKPI && !customKPI)}
+          disabled={!canSubmit || isUploading}
         >
           <LinearGradient
             colors={
-              mediaType && description && (selectedKPI || customKPI)
-                ? colors.gradient
+              canSubmit
+                ? (colors.gradient as [string, string])
                 : theme === 'dark'
-                  ? ['#2A2A2A', '#1A1A1A']
-                  : ['#D1D5DB', '#9CA3AF']
+                  ? ['#2A2A2A', '#1A1A1A'] as [string, string]
+                  : ['#D1D5DB', '#9CA3AF'] as [string, string]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.uploadButtonGradient}
           >
-            <Text style={[styles.uploadButtonText, { color: (mediaType && description && (selectedKPI || customKPI)) ? '#FFFFFF' : colors.buttonDisabledText }]}>Upload</Text>
+            <Text style={[styles.uploadButtonText, { color: canSubmit ? '#FFFFFF' : colors.buttonDisabledText }]}>
+              {isUploading ? 'Uploading...' : 'Upload'}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -363,16 +455,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#9CA3AF',
   },
-  textArea: {
+  messageComposer: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
+    borderRadius: 22,
     backgroundColor: '#F9FAFB',
-    minHeight: 100,
+    overflow: 'hidden',
+  },
+  messageToolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  formatButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageInput: {
+    minHeight: 108,
+    maxHeight: 180,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
+    fontSize: 15,
+    fontWeight: '500',
+    lineHeight: 21,
+    color: '#1F2937',
   },
   kpiGrid: {
     flexDirection: 'row',

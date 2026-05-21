@@ -5,6 +5,7 @@ export interface PickedAsset {
   uri: string;
   fileName: string | null;
   type: string;
+  mimeType?: string;
   width?: number;
   height?: number;
   fileSize?: number;
@@ -59,6 +60,7 @@ export async function pickImageFromLibrary(
       uri: asset.uri,
       fileName: asset.fileName || `image_${Date.now()}.jpg`,
       type: asset.type || 'image',
+      mimeType: asset.mimeType,
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
@@ -112,6 +114,7 @@ export async function takePhoto(
       uri: asset.uri,
       fileName: asset.fileName || `photo_${Date.now()}.jpg`,
       type: asset.type || 'image',
+      mimeType: asset.mimeType,
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
@@ -165,6 +168,7 @@ export async function pickVideoFromLibrary(
       uri: asset.uri,
       fileName: asset.fileName || `video_${Date.now()}.mp4`,
       type: asset.type || 'video',
+      mimeType: asset.mimeType,
       width: asset.width,
       height: asset.height,
       fileSize: asset.fileSize,
