@@ -33,6 +33,13 @@ function RootNavigator() {
             animation: 'none',
           }}
         />
+        <Stack.Screen
+          name="compose"
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
         <Stack.Screen name="settings" />
         <Stack.Screen name="+not-found" />
       </Stack>

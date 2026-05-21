@@ -15,10 +15,9 @@ import {
 } from 'react-native';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight, Plus, UserPlus } from 'lucide-react-native';
+import { Bell, MessageCircle, Sparkles, ExternalLink, ThumbsUp, ThumbsDown, GitBranch, User, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react-native';
 import { ShimmerCard } from '@/components/ShimmerPlaceholder';
 import Svg, { Circle } from 'react-native-svg';
-import { UploadModal } from '@/components/UploadModal';
 import { useRouter } from 'expo-router';
 import { Modal } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -274,7 +273,6 @@ const CATEGORY_CONTENT: Record<string, Array<{ id: string; title: string; thumbn
 };
 
 export default function HomePage() {
-  const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
   const [likedVideos, setLikedVideos] = useState<Set<string>>(new Set());
   const [dislikedVideos, setDislikedVideos] = useState<Set<string>>(new Set());
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
@@ -429,7 +427,10 @@ export default function HomePage() {
   };
 
   const handleSpiderChain = (videoId: string) => {
-    setExpandedVideoId(prev => prev === videoId ? null : videoId);
+    router.push({
+      pathname: '/compose',
+      params: { parentVideoId: videoId },
+    });
   };
 
   const handleFollow = (username: string) => {
@@ -755,19 +756,10 @@ export default function HomePage() {
                 </View>
               </TouchableOpacity>
 
-              {expandedVideoId === video.id && (
-                <View style={styles.uploadContainer}>
-                  <UploadModal
-                    onClose={() => setExpandedVideoId(null)}
-                    parentVideoId={video.id}
-                  />
-                </View>
-              )}
-
               {(index + 1) % 2 === 0 && renderAdSection(index)}
             </View>
           );
-        }, [feedData, likedVideos, dislikedVideos, expandedVideoId, followingUsers, colors, theme, router])}
+        }, [feedData, likedVideos, dislikedVideos, followingUsers, colors, theme, router])}
       />
 
       <ErrorToast
