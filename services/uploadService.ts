@@ -1,6 +1,5 @@
 import CryptoJS from 'crypto-js';
 import { PickedAsset } from '@/lib/imagePicker';
-import { BASE_URL } from '@/src/api/userService';
 
 type InitiateResp = {
   uploadSessionId: string;
@@ -26,6 +25,7 @@ type InitiateUploadBody = {
   uploadMode: 'SINGLE_PART';
   idempotencyKey: string;
 };
+export const BASE_URL = 'http://192.168.1.15:8081';
 
 const DEFAULT_API_BASE = BASE_URL;
 
@@ -92,21 +92,23 @@ export async function sha256HexForFile(uri: string): Promise<string> {
   return sha256HexForBlob(blob);
 }
 
-export async function initiateUpload(params: {
-  baseUrl?: string;
-  creatorId: string;
-  fileName: string;
-  contentType: string;
-  fileSizeBytes: number;
-  checksumHex: string;
-  title?: string;
-  description?: string;
-  declaredKpis?: string[];
-  language?: string;
-}): Promise<InitiateResp> {
-  const baseUrl = params.baseUrl ?? DEFAULT_API_BASE;
-  const body = buildInitiateUploadBody(params);
+export async function initiateUpload(
+  params: {
+    baseUrl?: string;
+    creatorId: string;
+    fileName: string;
+    contentType: string;
+    fileSizeBytes: number;
+    checksumHex: string;
+    title?: string;
+    description?: string;
+    declaredKpis?: string[];
+    language?: string;
+  }
+): Promise<InitiateResp> {
+  const baseUrl = DEFAULT_API_BASE;
 
+  const body = buildInitiateUploadBody(params);
   const res = await fetch(`${baseUrl}/v1/uploads/initiate`, {
     method: 'POST',
     headers: {
@@ -124,13 +126,14 @@ export async function initiateUpload(params: {
     );
   }
 
-  return (await res.json()) as InitiateResp;
+  const data = (await res.json()) as InitiateResp;
+  return data;
 }
 
 export async function uploadFileToS3(presignedUrl: string, headers: Record<string, string>, file: any) {
   const result = await fetch(presignedUrl, {
     method: 'PUT',
-    headers,
+    headers: headers,
     body: file as any,
   });
 
@@ -153,7 +156,6 @@ export async function completeUpload(baseUrl: string | undefined, uploadSessionI
       'X-Creator-Id': creatorId,
     },
   });
-
   if (!res.ok) {
     const message = await parseUploadError(res);
     throw new UploadServiceError(
@@ -161,21 +163,13 @@ export async function completeUpload(baseUrl: string | undefined, uploadSessionI
       message || 'Your file uploaded, but we could not finish saving it. Please retry.'
     );
   }
-
   return await res.json().catch(() => ({}));
 }
 
 export async function uploadAsset(
   asset: PickedAsset,
   creatorId: string,
-  opts?: {
-    baseUrl?: string;
-    title?: string;
-    description?: string;
-    declaredKpis?: string[];
-    language?: string;
-    complete?: boolean;
-  }
+  opts?: { baseUrl?: string; title?: string; description?: string; declaredKpis?: string[]; language?: string; complete?: boolean }
 ) {
   const baseUrl = opts?.baseUrl ?? DEFAULT_API_BASE;
   const contentType = getContentType(asset);
@@ -195,7 +189,9 @@ export async function uploadAsset(
     language: opts?.language,
   });
 
-  await uploadFileToS3(init.s3.presignedUrl, init.s3.headers, localFile.blob);
+  console.log('Initiate upload response:', init);
+
+  await uploadFileToS3(init.s3.presignedUrl, { ...init.s3.headers, 'Content-Type': contentType }, localFile.blob);
 
   if (opts?.complete ?? true) {
     await completeUpload(baseUrl, init.uploadSessionId, creatorId);
@@ -205,6 +201,7 @@ export async function uploadAsset(
 }
 
 function cryptoRandomUuid() {
+  // small UUID helper using random values
   const hex = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
   return `${hex()}${hex()}-${hex()}-${hex()}-${hex()}-${hex()}${hex()}${hex()}`;
 }
