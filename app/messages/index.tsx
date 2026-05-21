@@ -1,10 +1,14 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Circle } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { EdgeSwipeBack } from '@/components/EdgeSwipeBack';
+import { sessionStorage } from '@/lib/sessionStorage';
+import { useChatStore, ChatMessage, Conversation } from '@/hooks/useChatStore';
+import { useChatEngine } from '@/hooks/useChatEngine';
 
-interface Conversation {
+interface DisplayConversation {
   id: string;
   userId: string;
   username: string;
@@ -15,14 +19,13 @@ interface Conversation {
   isOnline: boolean;
 }
 
-const DUMMY_CONVERSATIONS: Conversation[] = [
+const DUMMY_CONVERSATIONS = [
   {
     id: '1',
     userId: 'user1',
     username: 'Sarah Chen',
     profileImage: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'That AI article you shared was really insightful! Would love to discuss more...',
-    lastMessageTime: '2m ago',
     unreadCount: 2,
     isOnline: true,
   },
@@ -32,7 +35,6 @@ const DUMMY_CONVERSATIONS: Conversation[] = [
     username: 'Marcus Webb',
     profileImage: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Thanks for the recommendation! Just finished watching it.',
-    lastMessageTime: '15m ago',
     unreadCount: 0,
     isOnline: true,
   },
@@ -42,7 +44,6 @@ const DUMMY_CONVERSATIONS: Conversation[] = [
     username: 'Emily Rodriguez',
     profileImage: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Hey! Did you see the latest post about machine learning?',
-    lastMessageTime: '1h ago',
     unreadCount: 1,
     isOnline: false,
   },
@@ -52,7 +53,6 @@ const DUMMY_CONVERSATIONS: Conversation[] = [
     username: 'David Kim',
     profileImage: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Great content as always! Keep it up 👍',
-    lastMessageTime: '3h ago',
     unreadCount: 0,
     isOnline: false,
   },
@@ -62,7 +62,6 @@ const DUMMY_CONVERSATIONS: Conversation[] = [
     username: 'Priya Sharma',
     profileImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Can you share the link to that research paper you mentioned?',
-    lastMessageTime: '5h ago',
     unreadCount: 3,
     isOnline: true,
   },
@@ -72,24 +71,151 @@ const DUMMY_CONVERSATIONS: Conversation[] = [
     username: 'Alex Thompson',
     profileImage: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=400',
     lastMessage: 'Looking forward to your next post!',
-    lastMessageTime: '1d ago',
     unreadCount: 0,
     isOnline: false,
   },
 ];
 
+// Backend mappings
+const mapToBackendId = (id: string) => {
+  if (id === 'user1') return 'usr_alice';
+  if (id === 'user2') return 'usr_bob';
+  if (id === 'user3') return 'usr_charlie';
+  return id;
+};
+
+const mapToClientId = (id: string) => {
+  if (id === 'usr_alice') return 'user1';
+  if (id === 'usr_bob') return 'user2';
+  if (id === 'usr_charlie') return 'user3';
+  return id;
+};
+
+const getConversationId = (uid1: string, uid2: string) => {
+  const b1 = mapToBackendId(uid1).replace('usr_', '');
+  const b2 = mapToBackendId(uid2).replace('usr_', '');
+  const sorted = [b1, b2].sort();
+  return `conv_direct_${sorted[0]}_${sorted[1]}`;
+};
+
 export default function MessagesListScreen() {
   const router = useRouter();
   const { colors, theme } = useTheme();
+  
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const formatLastMessage = (message: string, maxLength: number = 50) => {
+  // 1. Fetch Session Info
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const session = await sessionStorage.getSession();
+        const loggedInId = session?.id || 'user1';
+        setCurrentUserId(loggedInId);
+
+        // Seed conversations store if empty
+        const storeConversations = useChatStore.getState().conversations;
+        if (storeConversations.length === 0) {
+          const mapped = DUMMY_CONVERSATIONS.map((c) => {
+            const convId = getConversationId(loggedInId, c.userId);
+            const initialMsg: ChatMessage = {
+              messageId: `msg_init_${c.id}`,
+              conversationId: convId,
+              senderId: c.userId,
+              senderName: c.username,
+              messageText: c.lastMessage,
+              mediaUrl: null,
+              timestamp: Date.now() - 3600000 * 3, // mock 3 hours ago
+              reactions: [],
+              seenBy: [],
+              status: 'sent'
+            };
+
+            return {
+              id: convId,
+              name: c.username,
+              isGroup: false,
+              avatarUrl: c.profileImage,
+              members: [loggedInId, c.userId],
+              lastMessage: initialMsg,
+              unreadCount: { [loggedInId]: c.unreadCount }
+            };
+          });
+
+          useChatStore.getState().setConversations(mapped);
+
+          // Seed messages
+          mapped.forEach((conv) => {
+            if (conv.lastMessage) {
+              useChatStore.getState().addMessage(conv.id, conv.lastMessage);
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed loading session in conversation list:', err);
+        setCurrentUserId('user1');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  const loggedInId = currentUserId || 'user1';
+
+  // 2. Initialize global socket connection on entry
+  useChatEngine(undefined, loggedInId);
+
+  // 3. Connect reactive Zustand segments
+  const storeConversations = useChatStore((state) => state.conversations);
+  const presence = useChatStore((state) => state.presence);
+
+  const displayConversations: DisplayConversation[] = storeConversations.map((c) => {
+    const otherMemberId = c.members.find((m) => m !== loggedInId) || 'user2';
+    const clientId = mapToClientId(otherMemberId);
+    
+    // Resolve presence
+    const isOnline = presence[mapToBackendId(clientId)] || false;
+
+    // Resolve unread count for current user
+    const unreadCount = c.unreadCount ? c.unreadCount[loggedInId] || 0 : 0;
+
+    // Resolve last message details
+    const lastMessage = c.lastMessage ? c.lastMessage.messageText : '';
+    let lastMessageTime = '';
+    
+    if (c.lastMessage) {
+      const msgDate = new Date(c.lastMessage.timestamp);
+      const isToday = msgDate.toDateString() === new Date().toDateString();
+      
+      if (isToday) {
+        lastMessageTime = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else {
+        lastMessageTime = msgDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+    }
+
+    return {
+      id: c.id,
+      userId: clientId,
+      username: c.name,
+      profileImage: c.avatarUrl || '',
+      lastMessage,
+      lastMessageTime,
+      unreadCount,
+      isOnline
+    };
+  });
+
+  const formatLastMessage = (message: string, maxLength: number = 45) => {
     if (message.length > maxLength) {
       return message.substring(0, maxLength) + '...';
     }
     return message;
   };
 
-  const renderConversation = ({ item }: { item: Conversation }) => (
+  const renderConversation = ({ item }: { item: DisplayConversation }) => (
     <TouchableOpacity
       style={[styles.conversationCard, { backgroundColor: colors.surface, borderBottomColor: colors.borderLight }]}
       activeOpacity={0.7}
@@ -140,6 +266,14 @@ export default function MessagesListScreen() {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <EdgeSwipeBack onBack={() => router.back()} />
@@ -156,7 +290,7 @@ export default function MessagesListScreen() {
       </View>
 
       <FlatList
-        data={DUMMY_CONVERSATIONS}
+        data={displayConversations}
         renderItem={renderConversation}
         keyExtractor={(item) => item.id}
         style={styles.conversationsList}
@@ -171,6 +305,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
